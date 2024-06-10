@@ -278,7 +278,7 @@ if __name__ == '__main__':
 
     # Load the configuration
     config_base = swmmanywhere.load_config(config_path, 
-                            schema = Path(__file__).parent / 'schema.yml')
+                            schema_fid = Path(__file__).parent / 'schema.yml')
 
     # Check the parameters to sample
     config_base = check_parameters_to_sample(config_base)
