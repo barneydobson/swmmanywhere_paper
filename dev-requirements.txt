@@ -215,7 +215,7 @@ pluggy==1.4.0
     # via pytest
 pre-commit==3.6.2
     # via swmmanywhere (pyproject.toml)
-pyarrow==14.0.2
+pyarrow==16.1.0
     # via swmmanywhere (pyproject.toml)
 pydantic==2.5.3
     # via swmmanywhere (pyproject.toml)

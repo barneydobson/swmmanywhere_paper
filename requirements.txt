@@ -177,7 +177,7 @@ pillow==10.2.0
     #   imageio
     #   matplotlib
     #   scikit-image
-pyarrow==14.0.2
+pyarrow==16.1.0
     # via swmmanywhere (pyproject.toml)
 pydantic==2.5.3
     # via swmmanywhere (pyproject.toml)
