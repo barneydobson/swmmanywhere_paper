@@ -256,7 +256,7 @@ tifffile==2024.5.22
     # via scikit-image
 toolz==0.12.1
     # via cytoolz
-tqdm==4.66.2
+tqdm==4.66.4
     # via
     #   cdsapi
     #   swmmanywhere (pyproject.toml)
