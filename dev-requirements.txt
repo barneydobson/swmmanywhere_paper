@@ -193,7 +193,7 @@ packaging==23.2
     #   rioxarray
     #   scikit-image
     #   xarray
-pandas==2.1.4
+pandas==2.2.2
     # via
     #   fastparquet
     #   geopandas
