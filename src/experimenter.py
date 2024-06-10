@@ -233,6 +233,42 @@ def parse_arguments() -> tuple[int, int | None, Path]:
 
     return args.jobid, args.nproc, args.config_path
 
+def check_parameters_to_sample(config: dict):
+    """Check the parameters to sample in the config.
+
+    Args:
+        config (dict): The configuration.
+
+    Raises:
+        ValueError: If a parameter to sample is not in the parameters
+            dictionary.
+    """
+    params = get_full_parameters_flat()
+    for param in config.get('parameters_to_sample',{}):
+        # If the parameter is a dictionary, the values are bounds, all we are 
+        # checking here is that the parameter exists, we only need the first 
+        # entry.
+        if isinstance(param, dict):
+            if len(param) > 1:
+                raise ValueError("""If providing new bounds in the config, a dict 
+                                 of len 1 is required, where the key is the 
+                                 parameter to change and the values are 
+                                 (new_lower_bound, new_upper_bound).""")
+            param = list(param.keys())[0]
+
+        # Check that the parameter is available
+        if param not in params:
+            raise ValueError(f"{param} not found in parameters dictionary.")
+        
+        # Check that the parameter is sample-able
+        required_attrs = set(['minimum', 'maximum', 'default', 'category'])
+        correct_attrs = required_attrs.intersection(params[param])
+        missing_attrs = required_attrs.difference(correct_attrs)
+        if any(missing_attrs):
+            raise ValueError(f"{param} missing {missing_attrs} so cannot be sampled.")
+        
+    return config
+
 if __name__ == '__main__':
     # Get args
     jobid, nproc, config_path = parse_arguments()
@@ -241,8 +277,12 @@ if __name__ == '__main__':
     logger.add(config_path.parent / f'experimenter_{jobid}.log')
 
     # Load the configuration
-    config_base = swmmanywhere.load_config(config_path)
+    config_base = swmmanywhere.load_config(config_path, 
+                            schema = Path(__file__).parent / 'schema.yml')
 
+    # Check the parameters to sample
+    config_base = check_parameters_to_sample(config_base)
+    
     # Ensure the parameter overrides are set, since these are the way the 
     # sampled parameter values are implemented
     config_base['parameter_overrides'] = config_base.get('parameter_overrides') or {}

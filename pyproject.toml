@@ -9,11 +9,10 @@ requires = [
 exclude = ["htmlcov"] # Exclude the coverage report file from setuptools package finder
 
 [project]
-name = "swmmanywhere"
+name = "swmmanywhere_paper"
 version = "0.0.1"
 authors = [
     { name = "Barnaby Dobson", email = "b.dobson@imperial.ac.uk" },
-    { name = "Imperial College London RSE Team", email = "ict-rse-team@imperial.ac.uk" }
 ]
 requires-python = ">=3.10"
 classifiers = [
@@ -23,36 +22,9 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
-  "cdsapi",
-  "cytoolz",
-  "fastparquet",
-  "fiona",
-  "geopandas",
-  "geopy",
-  "GitPython",
-  "joblib",
-  "jsonschema",
-  "loguru",
   "matplotlib",
-  "netcdf4",
-  "netcomp@ git+https://github.com/barneydobson/NetComp.git",
-  "networkx>=3",
-  "numpy",
-  "osmnx",
-  "pandas",
-  "pyarrow",
-  "pydantic",
-  "pyflwdir",
-  "pysheds",
-  "pyswmm",
-  "PyYAML",
-  "rasterio",
-  "rioxarray",
   "SALib",
-  "SciPy",
-  "shapely",
-  "tqdm",
-  "xarray",
+  "swmmanywhere@ git+https://github.com/ImperialCollegeLondon/SWMManywhere.git",
 ]
 [project.optional-dependencies]
 dev = [
@@ -79,7 +51,7 @@ module = "tests.*"
 disallow_untyped_defs = false
 
 [tool.pytest.ini_options]
-addopts = "-v -p no:warnings --cov=swmmanywhere --cov-report=html --doctest-modules --ignore=swmmanywhere/__main__.py"
+addopts = "-v -p no:warnings --doctest-modules"
 
 [tool.ruff]
 select = ["D", "E", "F", "I"] # pydocstyle, pycodestyle, Pyflakes, isort
@@ -94,8 +66,6 @@ convention = "google"
 required-imports = ["from __future__ import annotations"]
 
 [tool.codespell]
-skip = "swmmanywhere/defs/iso_converter.yml,*.inp"
-ignore-words-list = "gage,gages"
 
 [tool.refurb]
 ignore = [

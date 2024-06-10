@@ -1,11 +1,15 @@
 """Tests for the main experimenter."""
 from __future__ import annotations
 
+import tempfile
+from pathlib import Path
 from unittest import mock
 
 import numpy as np
+import pytest
+import yaml
 
-from swmmanywhere import parameters
+from swmmanywhere import parameters, swmmanywhere
 from swmmanywhere.paper import experimenter
 
 
@@ -78,3 +82,47 @@ def test_process_parameters():
 
     assert len(result[0]) == 48
     assert_close(result[0][0]['min_v'], 0.310930)
+
+def test_check_parameters_to_sample():
+    """Test the check_parameters_to_sample validation."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        test_data_dir = Path(__file__).parent / 'test_data'
+        base_dir = Path(temp_dir)
+
+        # Load the config
+        with (test_data_dir / 'demo_config.yml').open('r') as f:
+            config = yaml.safe_load(f)
+        
+        # Correct and avoid filevalidation errors
+        config['real'] = None
+        
+        # Fill with unused paths to avoid filevalidation errors
+        config['base_dir'] = str(test_data_dir / 'storm.dat')
+        config['api_keys'] = str(test_data_dir / 'storm.dat')
+
+        # Make an edit that should fail
+        config['parameters_to_sample'] = ['not_a_parameter']
+        
+        with open(base_dir / 'test_config.yml', 'w') as f:
+            yaml.dump(config, f)
+
+        # Test parameter validation
+        with pytest.raises(ValueError) as exc_info:
+            swmmanywhere.load_config(base_dir / 'test_config.yml')
+        assert "not_a_parameter" in str(exc_info.value)
+
+        # Test parameter_overrides invalid category
+        config['parameter_overrides'] = {'fake_category' : {'fake_parameter' : 0}}
+        with pytest.raises(ValueError) as exc_info:
+            swmmanywhere.check_parameter_overrides(config)
+        assert "fake_category not a category" in str(exc_info.value)
+
+        # Test parameter_overrides invalid parameter
+        config['parameter_overrides'] = {'hydraulic_design' : {'fake_parameter' : 0}}
+        with pytest.raises(ValueError) as exc_info:
+            swmmanywhere.check_parameter_overrides(config)
+        assert "fake_parameter not found" in str(exc_info.value)
+        
+        # Test parameter_overrides valid
+        config['parameter_overrides'] = {'hydraulic_design' : {'min_v' : 1.0}}
+        _ = swmmanywhere.check_parameter_overrides(config)
