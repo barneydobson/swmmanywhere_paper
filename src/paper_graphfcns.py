@@ -4,7 +4,7 @@ import geopandas as gpd
 import networkx as nx
 
 from swmmanywhere.graph_utilities import register_graphfcn, BaseGraphFunction
-from swmmanywhere.metric_utilities import best_outlet_match
+from swmmanywhere.metric_utilities import nodes_to_subs
 from swmmanywhere.parameters import FilePaths
 
 @register_graphfcn
@@ -16,5 +16,6 @@ class trim_to_real(BaseGraphFunction):
                  **kwargs) -> nx.Graph:
         """"""
         real_subs = gpd.read_file(addresses.real_subcatchments)
-        G, _ = best_outlet_match(G, real_subs)
+        nodes_joined = nodes_to_subs(G, real_subs)
+        G = G.subgraph(nodes_joined.id).copy()
         return G
