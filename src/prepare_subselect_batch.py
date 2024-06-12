@@ -36,6 +36,7 @@ hpc_config['address_overrides']['precipitation'] = \
     '/rds/general/user/bdobson/home/swmmanywhere_paper/tests/test_data/storm.dat'
 hpc_config['api_keys'] = \
     '/rds/general/user/bdobson/home/swmmanywhere_paper/tests/test_data/api_keys.yml'
+del hpc_config['address_overrides']['national_building']
 for cut, so in zip(cuts, subbasin_streamorder):
     subselect_cut(base_dir, base_project, cut, buffer = 1/500)
     cut_dir = base_dir / f'{base_project}_{cut}'
