@@ -183,7 +183,8 @@ def process_parameters(jobid: int,
 
         address, metrics = swmmanywhere.swmmanywhere(config)
         if metrics is None:
-            raise ValueError(f"Model run {ix} failed.")
+            metrics = {}
+            logger.warning(f"Model run {ix} failed.")
 
         # Save the results
         flooding_results[ix] = {'iter': ix, 
