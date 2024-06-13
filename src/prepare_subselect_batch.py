@@ -61,5 +61,7 @@ for cut, so in zip(cuts, subbasin_streamorder):
     hpc_config['real']['subcatchments'] = cut_hpc_dir + 'real/subcatchments.geojson'
     hpc_config['real']['results'] = cut_hpc_dir + 'real/real_results.parquet'
     hpc_config['bbox'] = base_config['bbox']
+    hpc_config['address_overrides']['real_subcatchments'] = hpc_config['real']['subcatchments']
+    
 
     swmmanywhere.save_config(hpc_config, cut_dir / 'config.yml')

@@ -3,14 +3,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 from SALib.analyze import sobol
 from tqdm import tqdm
 
 from swmmanywhere.logging import logger
-from swmmanywhere.paper import experimenter
-from swmmanywhere.paper import plotting as swplt
+from swmmanywhere_paper.src import experimenter
+from swmmanywhere_paper.src import plotting as swplt
 from swmmanywhere.preprocessing import check_bboxes
 from swmmanywhere.swmmanywhere import load_config
 
@@ -18,10 +17,19 @@ from swmmanywhere.swmmanywhere import load_config
 # ## Initialise directories and load results
 # %%
 # Load the configuration file and extract relevant data
-if __name__ == 'main':
-    project = 'cranbrook'
+for project in [
+                "bellinge_G60F61Y_G60F390_l1",
+                "bellinge_G74F150_G74F140_l1",
+                # incomplete
+                "bellinge_G72F800_G72F050_l1",
+                "bellinge_G73F000_G72F120_l1",
+                "bellinge_G62F060_G61F180_l1",
+                "bellinge_G72F550_G72F010_l1",
+                "bellinge_G80F390_G80F380_l1",
+                ]:
+
     base_dir = Path.home() / "Documents" / "data" / "swmmanywhere"
-    config_path = base_dir / project / f'{project}_hpc.yml'
+    config_path = base_dir / project / f'config.yml'
     config = load_config(config_path, validation = False)
     config['base_dir'] = base_dir / project
     objectives = config['metric_list']
@@ -39,12 +47,15 @@ if __name__ == 'main':
     # Concatenate the results
     df = pd.concat(dfs)
 
-    # Log deltacon0 because it can be extremely large
-    df['nc_deltacon0'] = np.log(df['nc_deltacon0'])
+    df = df.loc[:,~df.columns.str.contains('subcatchment')]
+    df = df.drop('bias_flood_depth',axis=1)
+
     df = df.sort_values(by = 'iter')
 
+    objectives = set(objectives).intersection(df.columns)
+
     # Make a directory to store plots in
-    plot_fid = results_dir / 'plots'
+    plot_fid = results_dir.parent / 'plots'
     plot_fid.mkdir(exist_ok=True, parents=True)
 
     # %% [markdown]
@@ -79,12 +90,15 @@ if __name__ == 'main':
 
     # Perform the sensitivity analysis for groups
     problem['outputs'] = objectives
-    rg = {objective: sobol.analyze(problem, 
-                        df[objective].iloc[0:
-                                            (2**(config['sample_magnitude'] + 1) * 10)]
-                                            .values,
-                        print_to_console=False) 
-                        for objective in objectives}
+    rg = {objective: sobol.analyze(
+                problem, 
+                df[objective].iloc[0:
+                                    (2**(config['sample_magnitude'] + 1) *\
+                                      (len(set(problem['groups'])) + 1))]
+                                    .values,
+                print_to_console=False
+            ) 
+            for objective in objectives}
 
     # Perform the sensitivity analysis for parameters
     problemi = problem.copy()
@@ -99,3 +113,7 @@ if __name__ == 'main':
         swplt.plot_sensitivity_indices(r_, 
                                      objectives, 
                                      plot_fid / f'{groups}_indices.png')
+
+    # Heatmap of sensitivity indices    
+    for r_, groups in zip([rg,ri],  ['groups','parameters']):
+        swplt.heatmaps(r_, plot_fid / f'heatmap_{groups}_indices.png')
