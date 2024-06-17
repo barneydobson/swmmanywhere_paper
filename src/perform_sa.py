@@ -17,15 +17,14 @@ from swmmanywhere.swmmanywhere import load_config
 # ## Initialise directories and load results
 # %%
 # Load the configuration file and extract relevant data
-for project in [
-                "bellinge_G60F61Y_G60F390_l1",
-                "bellinge_G74F150_G74F140_l1",
-                # incomplete
+for project in ["bellinge_G80F390_G80F380_l1",
+                "bellinge_G72F800_G72F050_l1",
                 "bellinge_G72F800_G72F050_l1",
                 "bellinge_G73F000_G72F120_l1",
                 "bellinge_G62F060_G61F180_l1",
                 "bellinge_G72F550_G72F010_l1",
-                "bellinge_G80F390_G80F380_l1",
+                "bellinge_G60F61Y_G60F390_l1",
+                "bellinge_G74F150_G74F140_l1",
                 ]:
 
     base_dir = Path.home() / "Documents" / "data" / "swmmanywhere"
