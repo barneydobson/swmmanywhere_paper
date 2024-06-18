@@ -8,8 +8,8 @@ from SALib.analyze import sobol
 from tqdm import tqdm
 
 from swmmanywhere.logging import logger
-from swmmanywhere.paper import experimenter
-from swmmanywhere.paper import plotting as swplt
+from swmmanywhere_paper.src import experimenter
+from swmmanywhere_paper.src import plotting as swplt
 from swmmanywhere.preprocessing import check_bboxes
 from swmmanywhere.swmmanywhere import load_config
 
@@ -17,10 +17,19 @@ from swmmanywhere.swmmanywhere import load_config
 # ## Initialise directories and load results
 # %%
 # Load the configuration file and extract relevant data
-if __name__ == 'main':
-    project = 'cranbrook_formatted'
+for project in ["bellinge_G80F390_G80F380_l1",
+
+                "bellinge_G72F800_G72F050_l1",
+                "bellinge_G73F000_G72F120_l1",
+                "bellinge_G62F060_G61F180_l1",
+                "bellinge_G72F550_G72F010_l1",
+                
+                "bellinge_G60F61Y_G60F390_l1",
+                "bellinge_G74F150_G74F140_l1",
+                ]:
+
     base_dir = Path.home() / "Documents" / "data" / "swmmanywhere"
-    config_path = base_dir / project / 'cf.yml'
+    config_path = base_dir / project / f'config.yml'
     config = load_config(config_path, validation = False)
     config['base_dir'] = base_dir / project
     objectives = config['metric_list']
@@ -83,10 +92,14 @@ if __name__ == 'main':
     problem['outputs'] = objectives
     rg = {objective: sobol.analyze(
                 problem, 
-                df[objective].iloc[0:
+                (
+                    df[objective]
+                    .iloc[0:
                                     (2**(config['sample_magnitude'] + 1) *\
                                       (len(set(problem['groups'])) + 1))]
-                                    .values,
+                    .fillna(df[objective].median())
+                    .values
+                ),
                 print_to_console=False
             ) 
             for objective in objectives}
@@ -95,7 +108,11 @@ if __name__ == 'main':
     problemi = problem.copy()
     del problemi['groups']
     ri = {objective: sobol.analyze(problemi, 
-                        df[objective].values,
+                        (
+                            df[objective]
+                            .fillna(df[objective].median())
+                            .values
+                        ),
                         print_to_console=False) 
                         for objective in objectives}
 
