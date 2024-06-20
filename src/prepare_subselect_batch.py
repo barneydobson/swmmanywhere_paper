@@ -28,6 +28,7 @@ base_dir = Path(r'C:\Users\bdobson\Documents\data\swmmanywhere')
 base_config = swmmanywhere.load_config(base_dir / base_project / 'bf.yml')
 base_config['graphfcn_list'].insert(0,'trim_to_real')
 base_config['graphfcn_list'].remove('clip_to_catchments')
+base_config['graphfcn_list'].insert(11,'trim_to_real_subs')
 
 hpc_config = deepcopy(base_config)
 hpc_address = '/rds/general/user/bdobson/ephemeral/swmmanywhere'
