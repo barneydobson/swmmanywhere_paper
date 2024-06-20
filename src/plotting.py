@@ -16,7 +16,7 @@ from swmmanywhere import metric_utilities
 from swmmanywhere.geospatial_utilities import graph_to_geojson
 from swmmanywhere.graph_utilities import load_graph
 from swmmanywhere.parameters import MetricEvaluation, filepaths_from_yaml
-
+from swmmanywhere.swmmanywhere import load_config
 
 class ResultsPlotter():
     """Plotter object."""
@@ -36,7 +36,8 @@ class ResultsPlotter():
         """
         # Load the addresses
         self.addresses = filepaths_from_yaml(address_path)
-
+        self.config = load_config(self.addresses.project / 'config.yml',
+                                  validation=False)
         # Create the plot directory
         self.plotdir = self.addresses.model / 'plots'
         self.plotdir.mkdir(exist_ok = True)
@@ -72,7 +73,11 @@ class ResultsPlotter():
 
     def __getattr__(self, name):
         """Because these are large datasets, return a copy."""
-        return getattr(self, f'_{name}').copy()
+        if name in dir(self):
+            return getattr(self, name)
+        elif f'_{name}' in dir(self): 
+            return getattr(self, f'_{name}').copy()
+        raise AttributeError(f"'ResultsPlotter' object has no attribute '{name}'")
 
     def make_all_plots(self):
         """make_all_plots."""
@@ -305,7 +310,8 @@ def calculate_slope(G: nx.Graph):
             (u, v, k): (G.nodes[v]['chamber_floor_elevation'] - \
                         G.nodes[u]['chamber_floor_elevation']) / d['length']
             for u, v, k, d in G.edges(data=True, keys=True)
-        }
+        },
+        'slope'
     )
     
 def weighted_cdf(G: nx.Graph, value: str = 'diameter', weight: str = 'length'):
