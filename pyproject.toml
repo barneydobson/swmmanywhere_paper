@@ -24,6 +24,9 @@ classifiers = [
 dependencies = [
   "matplotlib",
   "SALib",
+  "seaborn",
+  "pymc",
+  "scikit-learn",
   "swmmanywhere@ git+https://github.com/ImperialCollegeLondon/SWMManywhere.git",
 ]
 [project.optional-dependencies]

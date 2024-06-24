@@ -17,7 +17,8 @@ from swmmanywhere.swmmanywhere import load_config
 # ## Initialise directories and load results
 # %%
 # Load the configuration file and extract relevant data
-for project in ["bellinge_G80F390_G80F380_l1",
+for project in ['cranbrook_formatted_largesample',
+                "bellinge_G80F390_G80F380_l1",
                 "bellinge_G72F800_G72F050_l1",
                 "bellinge_G73F000_G72F120_l1",
                 "bellinge_G62F060_G61F180_l1",
@@ -44,14 +45,14 @@ for project in ["bellinge_G80F390_G80F380_l1",
     nprocs = len(fids)
 
     # Concatenate the results
-    df = pd.concat(dfs)
+    df = pd.concat(dfs).reset_index(drop=True)
 
     df = df.loc[:,~df.columns.str.contains('subcatchment')]
     df = df.drop('bias_flood_depth',axis=1)
 
     df = df.sort_values(by = 'iter')
 
-    objectives = set(objectives).intersection(df.columns)
+    objectives = list(set(objectives).intersection(df.columns))
 
     # Make a directory to store plots in
     plot_fid = results_dir.parent / 'plots'
@@ -62,14 +63,21 @@ for project in ["bellinge_G80F390_G80F380_l1",
     # %%
     # Highlight the behavioural indices 
     # (i.e., KGE, NSE, PBIAS are in some preferred range)
-    behavioral_indices = swplt.create_behavioral_indices(df)
+    behavioral_indices = swplt.create_behavioral_indices(df,
+                                                         objectives)
 
+    swplt.plot_distributions(df,
+                             parameters,
+                             behavioral_indices,
+                             plot_fid)
+    
     # Plot the objectives
     swplt.plot_objectives(df, 
                             parameters, 
                             objectives, 
                             behavioral_indices,
                             plot_fid)
+
 
     # %% [markdown]
     # ## Perform Sensitivity Analysis

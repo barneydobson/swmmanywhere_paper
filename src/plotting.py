@@ -9,9 +9,12 @@ from pathlib import Path
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import networkx as nx
+import numpy as np
 import pandas as pd
+from paretoset import paretoset
 import seaborn as sns
 from SALib.plotting.bar import plot as barplot
+from scipy import stats
 
 from swmmanywhere import metric_utilities
 from swmmanywhere.geospatial_utilities import graph_to_geojson
@@ -71,6 +74,12 @@ class ResultsPlotter():
         # Load the subcatchments
         self._synthetic_subcatchments = gpd.read_file(self.addresses.subcatchments)
         self._real_subcatchments = gpd.read_file(real_dir / 'subcatchments.geojson')
+
+        # Calculate outlets
+        self.sg_syn, self.syn_outlet = metric_utilities.best_outlet_match(self.synthetic_G, 
+                                                                self.real_subcatchments)
+        self.sg_real, self.real_outlet = metric_utilities.dominant_outlet(self.real_G, 
+                                                                self.real_results)
 
     def __getattr__(self, name):
         """Because these are large datasets, return a copy."""
@@ -139,20 +148,16 @@ class ResultsPlotter():
             fid (Path, optional): The file to save the plot to. Defaults to None.
             ax_ ([type], optional): The axes to plot on. Defaults to None.
         """            
-        sg_syn, syn_outlet = metric_utilities.best_outlet_match(self.synthetic_G, 
-                                                                self.real_subcatchments)
-        sg_real, real_outlet = metric_utilities.dominant_outlet(self.real_G, 
-                                                                self.real_results)
         if var == 'flow':
             # Identify synthetic and real arcs that flow into the best outlet node
             syn_arc = [d['id'] for u,v,d in self.synthetic_G.edges(data=True)
-                        if v == syn_outlet]
+                        if v == self.syn_outlet]
             real_arc = [d['id'] for u,v,d in self.real_G.edges(data=True)
-                    if v == real_outlet]
+                    if v == self.real_outlet]
         elif var == 'flooding':
             # Use all nodes in the outlet match subgraphs
-            syn_arc = list(sg_syn.nodes)
-            real_arc = list(sg_real.nodes)
+            syn_arc = list(self.sg_syn.nodes)
+            real_arc = list(self.sg_real.nodes)
         df = metric_utilities.align_by_id(self.synthetic_results,
                                            self.real_results,
                                            var,
@@ -350,14 +355,15 @@ def weighted_cdf(G: nx.Graph, value: str = 'diameter', weight: str = 'length'):
 
     return data_sorted[value].tolist(), cumulative_weights.tolist()
 
-def create_behavioral_indices(df: pd.DataFrame) -> tuple[pd.Series, pd.Series]:
+def create_behavioral_indices(df: pd.DataFrame,
+                              objectives) -> pd.Series:
     """Create behavioral indices for a dataframe.
 
     Args:
         df (pd.DataFrame): A dataframe containing the results.
 
     Returns:
-        tuple[pd.Series, pd.Series]: A tuple of two series, the first is the
+        tuple [pd.Series]: A tuple of two series, the first is the
             behavioural indices for 'strict' objectives (KGE/NSE), the second 
             is the behavioural indices for less strict objectives (relerror).
     """
@@ -368,12 +374,34 @@ def create_behavioral_indices(df: pd.DataFrame) -> tuple[pd.Series, pd.Series]:
     behavioural_ind_relerror = (df.loc[:, 
                                    df.columns.str.contains('relerror')].abs() < 0.1
                             ).any(axis=1)
-    return behavioural_ind_nse | behavioural_ind_kge, behavioural_ind_relerror
+    
+    df_ = df[objectives].copy()
+
+    for objective in objectives:
+        if 'relerror' in objective:
+            df_[objective] = df_[objective].abs()
+    priority_objs = ['outlet_kge_flow',
+          'outlet_kge_flooding',
+          'grid_kge_flooding',
+          'grid_nse_flooding',
+          'outlet_nse_flow',
+          'outlet_nse_flooding',
+          'outlet_relerror_flow',
+          'outlet_relerror_flooding',
+          'grid_relerror_flooding'
+          ]
+    mask = paretoset(df_[priority_objs],
+                     sense = ['max' 
+                              if any([s in o for s in ['kge','nse']])
+                              else 'min' for o in priority_objs])
+    combined = behavioural_ind_nse & behavioural_ind_kge & behavioural_ind_relerror & mask
+    
+    return mask
 
 def plot_objectives(df: pd.DataFrame, 
                     parameters: list[str], 
                     objectives: list[str], 
-                    behavioral_indices: tuple[pd.Series, pd.Series],
+                    behavioral_indices: pd.Series,
                     plot_fid: Path):
     """Plot the objectives.
 
@@ -381,7 +409,7 @@ def plot_objectives(df: pd.DataFrame,
         df (pd.DataFrame): A dataframe containing the results.
         parameters (list[str]): A list of parameters to plot.
         objectives (list[str]): A list of objectives to plot.
-        behavioral_indices (tuple[pd.Series, pd.Series]): A tuple of two series
+        behavioral_indices (pd.Series): A tuple of two series
             see create_behavioral_indices.
         plot_fid (Path): The directory to save the plots to.
     """
@@ -391,7 +419,7 @@ def plot_objectives(df: pd.DataFrame,
         n_rows = n_cols + 1
     else:
         n_rows = n_cols
-        
+
     for parameter in parameters:
         fig, axs = plt.subplots(n_rows, n_cols, figsize=(10, 10))
         for ax, objective in zip(axs.flat, objectives):
@@ -406,12 +434,45 @@ def plot_objectives(df: pd.DataFrame,
         fig.savefig(plot_fid / f"{parameter.replace('_', '-')}.png", dpi=500)
         plt.close(fig)
     return fig
+def plot_distributions(df: pd.DataFrame, 
+                    parameters: list[str], 
+                    behavioral_indices: pd.Series,
+                    plot_fid: Path):
+    """Plot the objectives.
 
+    Args:
+        df (pd.DataFrame): A dataframe containing the results.
+        parameters (list[str]): A list of parameters to plot.
+        behavioral_indices (pd.Series): A tuple of two series
+            see create_behavioral_indices.
+        plot_fid (Path): The directory to save the plots to.
+    """
+    n_panels = len(parameters)
+    n_cols = int(n_panels**0.5)
+    if n_cols * (n_cols + 1) >= n_panels:
+        n_rows = n_cols + 1
+    else:
+        n_rows = n_cols
+
+    fig, axs = plt.subplots(n_rows, n_cols, figsize=(10, 10))
+    for parameter,ax in zip(parameters, axs.flat):
+        
+        values = df.loc[behavioral_indices, parameter]
+        kde = stats.gaussian_kde(values)
+        x = np.linspace(values.min(), values.max(), 100)
+        ax.plot(x, kde(x), 'r')
+        ax.set_title(parameter.replace('_','\n'))
+        ax.grid(True)
+            
+    fig.tight_layout()
+    fig.savefig(plot_fid / f"parameter_distributions.png", dpi=500)
+    plt.close(fig)
+    return fig
 def setup_axes(ax: plt.Axes, 
                df: pd.DataFrame,
                parameter: str, 
                objective: str, 
-               behavioral_indices: tuple[pd.Series, pd.Series]
+               behavioral_indices: pd.Series
                ):
     """Set up the axes for plotting.
 
@@ -420,14 +481,13 @@ def setup_axes(ax: plt.Axes,
         df (pd.DataFrame): A dataframe containing the results.
         parameter (list[str]): The parameter to plot.
         objective (list[str]): The objective to plot.
-        behavioral_indices (tuple[pd.Series, pd.Series]): A tuple of two series
+        behavioral_indices (pd.Series): A tuple of two series
             see create_behavioral_indices.
     """
     ax.scatter(df[parameter], df[objective], s=0.5, c='b')
-    ax.scatter(df.loc[behavioral_indices[1], parameter], 
-               df.loc[behavioral_indices[1], objective], s=2, c='c')
-    ax.scatter(df.loc[behavioral_indices[0], parameter], 
-               df.loc[behavioral_indices[0], objective], s=2, c='r')
+    ax.scatter(df.loc[behavioral_indices, parameter], 
+               df.loc[behavioral_indices, objective], s=2, c='r')
+    
     #ax.set_yscale('symlog')
     ax.set_title(objective.replace('_','\n'))
     ax.grid(True)
