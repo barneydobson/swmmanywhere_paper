@@ -18,7 +18,6 @@ from swmmanywhere.swmmanywhere import load_config
 # %%
 # Load the configuration file and extract relevant data
 for project in ["bellinge_G80F390_G80F380_l1",
-
                 "bellinge_G72F800_G72F050_l1",
                 "bellinge_G73F000_G72F120_l1",
                 "bellinge_G62F060_G61F180_l1",

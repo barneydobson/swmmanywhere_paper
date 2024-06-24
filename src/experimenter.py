@@ -22,8 +22,10 @@ os.environ['OMP_NUM_THREADS'] = '1'
 from swmmanywhere import swmmanywhere  # noqa: E402
 from swmmanywhere.logging import logger  # noqa: E402
 from swmmanywhere.parameters import get_full_parameters_flat  # noqa: E402
+from swmmanywhere_paper.src import paper_graphfcns # noqa: E402
 
 os.environ['SWMMANYWHERE_VERBOSE'] = "true"
+
 
 def formulate_salib_problem(parameters_to_select: 
                             list[str | dict] | None = None) -> dict:
@@ -181,7 +183,8 @@ def process_parameters(jobid: int,
 
         address, metrics = swmmanywhere.swmmanywhere(config)
         if metrics is None:
-            raise ValueError(f"Model run {ix} failed.")
+            metrics = {}
+            logger.warning(f"Model run {ix} failed.")
 
         # Save the results
         flooding_results[ix] = {'iter': ix, 
