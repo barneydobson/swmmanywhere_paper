@@ -3,12 +3,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
-from SALib.analyze import sobol
+from SALib.analyze import sobol, delta
 from tqdm import tqdm
 
 from swmmanywhere.logging import logger
-from swmmanywhere_paper.src import experimenter
+from swmmanywhere_paper.src import experimenter, utilities
 from swmmanywhere_paper.src import plotting as swplt
 from swmmanywhere.preprocessing import check_bboxes
 from swmmanywhere.swmmanywhere import load_config
@@ -48,7 +49,7 @@ for project in ["bellinge_G80F390_G80F380_l1",
 
     df = df.loc[:,~df.columns.str.contains('subcatchment')]
     df = df.drop('bias_flood_depth',axis=1)
-
+    df[df == np.inf] = None
     df = df.sort_values(by = 'iter')
 
     objectives = set(objectives).intersection(df.columns)
@@ -87,16 +88,19 @@ for project in ["bellinge_G80F390_G80F380_l1",
     if missing_iters:
         logger.warning(f"Missing {len(missing_iters)} iterations")
 
+    # Fill nans with interp
+    df_o = utilities.fill_nans_with_ann(df[list(objectives)], 
+                                        df[list(parameters)])
+
     # Perform the sensitivity analysis for groups
     problem['outputs'] = objectives
     rg = {objective: sobol.analyze(
                 problem, 
                 (
-                    df[objective]
+                    df_o[objective]
                     .iloc[0:
                                     (2**(config['sample_magnitude'] + 1) *\
                                       (len(set(problem['groups'])) + 1))]
-                    .fillna(df[objective].median())
                     .values
                 ),
                 print_to_console=False
@@ -108,8 +112,7 @@ for project in ["bellinge_G80F390_G80F380_l1",
     del problemi['groups']
     ri = {objective: sobol.analyze(problemi, 
                         (
-                            df[objective]
-                            .fillna(df[objective].median())
+                            df_o[objective]
                             .values
                         ),
                         print_to_console=False) 
