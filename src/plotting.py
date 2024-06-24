@@ -10,6 +10,7 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import networkx as nx
 import pandas as pd
+import seaborn as sns
 from SALib.plotting.bar import plot as barplot
 
 from swmmanywhere import metric_utilities
@@ -105,14 +106,12 @@ class ResultsPlotter():
         syn_G = self.synthetic_G
         for u,v,d in syn_G.edges(data=True):
             d['flow'] = synthetic_max.loc[(d['id'],'flow'),'value']
-
         real_G = self.real_G
         for u,v,d in real_G.edges(data=True):
             d['flow'] = real_max.loc[(d['id'],'flow'),'value']
 
         for u,d in syn_G.nodes(data=True):
             d['flood'] = synthetic_max.loc[(u,'flooding'),'value']
-
         for u,d in real_G.nodes(data=True):
             d['flood'] = real_max.loc[(u,'flooding'),'value']
 
@@ -124,7 +123,6 @@ class ResultsPlotter():
                          self.plotdir / 'real_graph_nodes.geojson',
                          self.plotdir / 'real_graph_edges.geojson',
                          real_G.graph['crs'])
-
 
     def outlet_plot(self, 
                     var: str = 'flow',
@@ -363,9 +361,9 @@ def create_behavioral_indices(df: pd.DataFrame) -> tuple[pd.Series, pd.Series]:
             behavioural indices for 'strict' objectives (KGE/NSE), the second 
             is the behavioural indices for less strict objectives (relerror).
     """
-    behavioural_ind_nse = ((df.loc[:, df.columns.str.contains('nse')] > 0) & \
+    behavioural_ind_nse = ((df.loc[:, df.columns.str.contains('nse')] > 0.7) & \
                            (df.loc[:, df.columns.str.contains('nse')] < 1)).any(axis=1)
-    behavioural_ind_kge = ((df.loc[:, df.columns.str.contains('kge')] > -0.41) &\
+    behavioural_ind_kge = ((df.loc[:, df.columns.str.contains('kge')] > 0.7) &\
                             (df.loc[:, df.columns.str.contains('kge')] < 1)).any(axis=1)
     behavioural_ind_relerror = (df.loc[:, 
                                    df.columns.str.contains('relerror')].abs() < 0.1
@@ -387,18 +385,24 @@ def plot_objectives(df: pd.DataFrame,
             see create_behavioral_indices.
         plot_fid (Path): The directory to save the plots to.
     """
-    n_rows_cols = int(len(objectives)**0.5 + 1)
+    n_panels = len(objectives)
+    n_cols = int(n_panels**0.5)
+    if n_cols * (n_cols + 1) >= n_panels:
+        n_rows = n_cols + 1
+    else:
+        n_rows = n_cols
+        
     for parameter in parameters:
-        fig, axs = plt.subplots(n_rows_cols, n_rows_cols, figsize=(10, 10))
+        fig, axs = plt.subplots(n_rows, n_cols, figsize=(10, 10))
         for ax, objective in zip(axs.flat, objectives):
             setup_axes(ax, df, parameter, objective, behavioral_indices)
             add_threshold_lines(ax, 
                                 objective, 
                                 df[parameter].min(), 
                                 df[parameter].max())
-        fig.tight_layout()
+        
         fig.suptitle(parameter)
-
+        fig.tight_layout()
         fig.savefig(plot_fid / f"{parameter.replace('_', '-')}.png", dpi=500)
         plt.close(fig)
     return fig
@@ -424,11 +428,13 @@ def setup_axes(ax: plt.Axes,
                df.loc[behavioral_indices[1], objective], s=2, c='c')
     ax.scatter(df.loc[behavioral_indices[0], parameter], 
                df.loc[behavioral_indices[0], objective], s=2, c='r')
-    ax.set_yscale('symlog')
-    ax.set_title(objective)
+    #ax.set_yscale('symlog')
+    ax.set_title(objective.replace('_','\n'))
     ax.grid(True)
     if 'nse' in objective:
-        ax.set_ylim([-10, 1])
+        ax.set_ylim([0, 1])
+    if 'kge' in objective:
+        ax.set_ylim([-0.41,1])
 
 def add_threshold_lines(ax, objective, xmin, xmax):
     """Add threshold lines to the axes.
@@ -441,8 +447,8 @@ def add_threshold_lines(ax, objective, xmin, xmax):
     """
     thresholds = {
         'relerror': [-0.1, 0.1],
-        'nse': [0],
-        'kge': [-0.41]
+        'nse': [0.7],
+        'kge': [0.7]
     }
     for key, values in thresholds.items():
         if key in objective:
@@ -477,4 +483,42 @@ def plot_sensitivity_indices(r_: dict[str, pd.DataFrame],
         ax.get_legend().remove()
     f.tight_layout()
     f.savefig(plot_fid)  
+    plt.close(f)
+
+def heatmaps(r_: dict[str, pd.DataFrame],
+                             plot_fid: Path):
+    """Plot heatmap of sensitivity indices.
+
+    Args:
+        r_ (dict[str, pd.DataFrame]): A dictionary containing the sensitivity 
+            indices as produced by SALib.analyze.
+        plot_fid (Path): The directory to save the plots to.
+    """
+    totals = []
+    interactions = []
+    for (objective,r) in r_.items():
+        total, first, second = r.to_df()
+        interaction = total['ST'] - first['S1']
+        
+        total = total['ST'].to_dict()
+        total['objective'] = objective
+        totals.append(total)
+
+        interaction = interaction.to_dict()
+        interaction['objective'] = objective
+        interactions.append(interaction)
+
+    totals = pd.DataFrame(totals).set_index('objective')
+    interactions = pd.DataFrame(interactions).set_index('objective')
+
+    f,axs = plt.subplots(2,1,figsize=(10,10))
+
+    cmap = sns.color_palette("YlOrRd", as_cmap=True)
+    cmap.set_bad(color='grey')  # Color for NaN values
+    cmap.set_under(color='#d5f5eb')  # Color for 0.0 values
+
+    sns.heatmap(totals, vmin = 1e-6, linewidth=0.5,ax=axs[0],cmap=cmap)
+    sns.heatmap(interactions, vmin = 1e-6, linewidth=0.5,ax=axs[1],cmap=cmap)
+    f.tight_layout()
+    f.savefig(plot_fid)
     plt.close(f)
