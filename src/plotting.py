@@ -394,6 +394,7 @@ def create_behavioral_indices(df: pd.DataFrame,
                      sense = ['max' 
                               if any([s in o for s in ['kge','nse']])
                               else 'min' for o in priority_objs])
+
     combined = behavioural_ind_nse & behavioural_ind_kge & behavioural_ind_relerror & mask
     
     return mask
@@ -433,11 +434,12 @@ def plot_objectives(df: pd.DataFrame,
         fig.tight_layout()
         fig.savefig(plot_fid / f"{parameter.replace('_', '-')}.png", dpi=500)
         plt.close(fig)
-    return fig
+    
 def plot_distributions(df: pd.DataFrame, 
                     parameters: list[str], 
-                    behavioral_indices: pd.Series,
-                    plot_fid: Path):
+                    objectives: list[str], 
+                    plot_fid: Path,
+                    axs= None):
     """Plot the objectives.
 
     Args:
@@ -446,6 +448,7 @@ def plot_distributions(df: pd.DataFrame,
         behavioral_indices (pd.Series): A tuple of two series
             see create_behavioral_indices.
         plot_fid (Path): The directory to save the plots to.
+        axs (plt.Axes, optional): The axes to plot on. Defaults to None.
     """
     n_panels = len(parameters)
     n_cols = int(n_panels**0.5)
@@ -453,21 +456,55 @@ def plot_distributions(df: pd.DataFrame,
         n_rows = n_cols + 1
     else:
         n_rows = n_cols
+    if not isinstance(axs,np.ndarray):
+        fig, axs = plt.subplots(n_rows, n_cols, figsize=(10, 10))
+        sf = True
+    else:
+        sf = False
+        fig = plt.gcf()
+    from sklearn.preprocessing import StandardScaler
+    df_ = df.copy()
+    df_ = df_.dropna(axis=1,how='all').dropna(axis=0,how='any')
+    
+    scaler = StandardScaler()
+    
+    df_ = pd.DataFrame(data=scaler.fit_transform(df_),
+                       columns = df_.columns,
+                       index = df_.index)
+#    objs = set(objectives).intersection(df_.columns)
+#    for objective in objs:
+#        if 'relerror' in objective:
+#            df_[objective] = df_[objective].abs()
 
-    fig, axs = plt.subplots(n_rows, n_cols, figsize=(10, 10))
+#    weights = pd.concat([df_[x].rank(ascending = False)
+#                         if any([s in x for s in ['kge','nse']])
+#                         else df_[x].rank(ascending = True)
+#                         for x in objs], 
+#                        axis = 1)
+#    weights = df_[[x for x in objs if 'nse' in x or 'kge' in x]]
+#    weights = weights.dropna(axis=1, how='all').mean(axis=1)
+    weights = df_['outlet_nse_flow']
+    weights[weights < 0] = 0
+    #weights = weights.max() - weights
     for parameter,ax in zip(parameters, axs.flat):
+        column_index = df_.columns.get_loc(parameter)
+        # Fit the column scaler to the original data column (not the scaled data)
+        column_scaler = StandardScaler()
+
+        column_scaler.mean_ = scaler.mean_[column_index]
+        column_scaler.scale_ = scaler.scale_[column_index]        
         
-        values = df.loc[behavioral_indices, parameter]
-        kde = stats.gaussian_kde(values)
-        x = np.linspace(values.min(), values.max(), 100)
-        ax.plot(x, kde(x), 'r')
+        kde = stats.gaussian_kde(df_[parameter], weights = weights)
+        x = np.linspace(df_[parameter].min(), df_[parameter].max(), 100)
+        ax.plot(column_scaler.inverse_transform(x.reshape(-1,1)), kde(x))
         ax.set_title(parameter.replace('_','\n'))
         ax.grid(True)
-            
+    
     fig.tight_layout()
     fig.savefig(plot_fid / f"parameter_distributions.png", dpi=500)
-    plt.close(fig)
-    return fig
+    if sf:
+        plt.close(fig)
+    
 def setup_axes(ax: plt.Axes, 
                df: pd.DataFrame,
                parameter: str, 
