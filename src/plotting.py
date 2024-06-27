@@ -16,7 +16,10 @@ from SALib.plotting.bar import plot as barplot
 from swmmanywhere import metric_utilities
 from swmmanywhere.geospatial_utilities import graph_to_geojson
 from swmmanywhere.graph_utilities import load_graph
-from swmmanywhere.parameters import MetricEvaluation, filepaths_from_yaml
+from swmmanywhere.parameters import (
+    MetricEvaluation, 
+    filepaths_from_yaml
+)
 from swmmanywhere.swmmanywhere import load_config
 
 class ResultsPlotter():
@@ -486,7 +489,8 @@ def plot_sensitivity_indices(r_: dict[str, pd.DataFrame],
     plt.close(f)
 
 def heatmaps(r_: dict[str, pd.DataFrame],
-                             plot_fid: Path):
+                             plot_fid: Path,
+                             problem = None):
     """Plot heatmap of sensitivity indices.
 
     Args:
@@ -496,6 +500,7 @@ def heatmaps(r_: dict[str, pd.DataFrame],
     """
     totals = []
     interactions = []
+    firsts = []
     for (objective,r) in r_.items():
         total, first, second = r.to_df()
         interaction = total['ST'] - first['S1']
@@ -508,17 +513,43 @@ def heatmaps(r_: dict[str, pd.DataFrame],
         interaction['objective'] = objective
         interactions.append(interaction)
 
+        first = first['S1'].to_dict()
+        first['objective'] = objective
+        firsts.append(first)
+
     totals = pd.DataFrame(totals).set_index('objective')
     interactions = pd.DataFrame(interactions).set_index('objective')
+    firsts = pd.DataFrame(firsts).set_index('objective')
 
+    if set(problem['names']) == set(totals.columns):
+
+        df = pd.DataFrame([problem['names'],problem['groups']]).T
+        df.columns = ['parameter','group']
+        df = df.sort_values(by=['group','parameter'])
+        totals = totals[df.parameter]
+        interactions = interactions[df.parameter]
+        firsts = firsts[df.parameter]
+    
+    obj_grps = ['flow','flooding','outlet']
+    objectives = totals.reset_index()[['objective']]
+    objectives['group'] = 'graph'
+    for ix, obj in objectives.iterrows():
+        for grp in obj_grps:
+            if grp in obj['objective']:
+                objectives.loc[ix,'group'] = grp
+                break
+    objectives = objectives.sort_values(by=['group','objective'])
+    totals = totals.loc[objectives['objective']]
+    interactions = interactions.loc[objectives['objective']]
+    firsts = firsts.loc[objectives['objective']]
     f,axs = plt.subplots(2,1,figsize=(10,10))
 
     cmap = sns.color_palette("YlOrRd", as_cmap=True)
     cmap.set_bad(color='grey')  # Color for NaN values
     cmap.set_under(color='#d5f5eb')  # Color for 0.0 values
 
-    sns.heatmap(totals, vmin = 1e-6, linewidth=0.5,ax=axs[0],cmap=cmap)
-    sns.heatmap(interactions, vmin = 1e-6, linewidth=0.5,ax=axs[1],cmap=cmap)
+    sns.heatmap(firsts, vmin = 1/100, linewidth=0.5,ax=axs[0],cmap=cmap)
+    sns.heatmap(totals, vmin = 1/100, linewidth=0.5,ax=axs[1],cmap=cmap)
     f.tight_layout()
     f.savefig(plot_fid)
     plt.close(f)
