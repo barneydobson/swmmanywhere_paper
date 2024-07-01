@@ -74,7 +74,7 @@ fiona==1.9.6
     #   swmmanywhere
 fonttools==4.53.0
     # via matplotlib
-fsspec==2024.6.0
+fsspec==2024.6.1
     # via fastparquet
 geographiclib==2.0
     # via geopy
