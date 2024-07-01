@@ -80,7 +80,7 @@ distlib==0.3.8
     # via virtualenv
 fastparquet==2024.5.0
     # via swmmanywhere
-filelock==3.14.0
+filelock==3.15.4
     # via
     #   pytest-mypy
     #   virtualenv
