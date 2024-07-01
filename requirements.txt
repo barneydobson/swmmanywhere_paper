@@ -243,7 +243,7 @@ salib==1.5.0
     # via swmmanywhere_paper (pyproject.toml)
 scikit-image==0.24.0
     # via pysheds
-scipy==1.13.1
+scipy==1.14.0
     # via
     #   netcomp
     #   pyflwdir
