@@ -65,11 +65,11 @@ for project in [ "cranbrook_node_1439.1",
     behavioral_indices = swplt.create_behavioral_indices(df)
 
     # Plot the objectives
-  #  swplt.plot_objectives(df, 
-  #                          parameters, 
-  #                          objectives, 
-  #                          behavioral_indices,
-  #                          plot_fid)
+    swplt.plot_objectives(df, 
+                            parameters, 
+                            objectives, 
+                            behavioral_indices,
+                            plot_fid)
 
     # %% [markdown]
     # ## Perform Sensitivity Analysis
