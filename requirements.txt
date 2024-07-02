@@ -325,7 +325,7 @@ rpds-py==0.18.1
     #   referencing
 salib==1.5.0
     # via swmmanywhere_paper (pyproject.toml)
-scikit-image==0.23.2
+scikit-image==0.24.0
     # via pysheds
 scikit-learn==1.5.0
     # via swmmanywhere_paper (pyproject.toml)

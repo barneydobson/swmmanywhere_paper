@@ -98,7 +98,7 @@ etuples==0.3.9
     #   pytensor
 fastparquet==2024.5.0
     # via swmmanywhere
-filelock==3.14.0
+filelock==3.15.4
     # via
     #   pytensor
     #   pytest-mypy
@@ -382,7 +382,7 @@ ruff==0.4.8
     # via swmmanywhere_paper (pyproject.toml)
 salib==1.5.0
     # via swmmanywhere_paper (pyproject.toml)
-scikit-image==0.23.2
+scikit-image==0.24.0
     # via pysheds
 scikit-learn==1.5.0
     # via swmmanywhere_paper (pyproject.toml)
