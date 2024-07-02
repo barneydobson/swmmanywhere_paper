@@ -21,7 +21,7 @@ from swmmanywhere.parameters import (
     filepaths_from_yaml
 )
 from swmmanywhere.swmmanywhere import load_config
-
+from swmmanywhere_paper.src import utilities
 class ResultsPlotter():
     """Plotter object."""
     def __init__(self, 
@@ -65,7 +65,7 @@ class ResultsPlotter():
 
         self._real_G = load_graph(real_dir / 'graph.json')
         self._real_G = nx.relabel_nodes(self._real_G,
-                         {x : str(x) for x in self._real_G.nodes})
+                        {x : str(x) for x in self._real_G.nodes})
         
         # Calculate the slope
         calculate_slope(self._synthetic_G)
@@ -74,6 +74,20 @@ class ResultsPlotter():
         # Load the subcatchments
         self._synthetic_subcatchments = gpd.read_file(self.addresses.subcatchments)
         self._real_subcatchments = gpd.read_file(real_dir / 'subcatchments.geojson')
+
+        # Calculate outlets
+        self.sg_syn, self.syn_outlet = metric_utilities.best_outlet_match(self.synthetic_G, 
+                                                                self.real_subcatchments)
+        self.sg_real, self.real_outlet = metric_utilities.dominant_outlet(self.real_G, 
+                                                                self.real_results)
+        
+        # Calculate travel times
+        self._real_G = utilities.calc_flowtimes(self.real_G, 
+                                 self.real_results,
+                                 self.real_outlet)
+        self._synthetic_G = utilities.calc_flowtimes(self.synthetic_G,
+                                 self.synthetic_results,
+                                 self.syn_outlet)
 
     def __getattr__(self, name):
         """Because these are large datasets, return a copy."""
@@ -93,6 +107,7 @@ class ResultsPlotter():
         self.design_distribution(value='diameter', ax_ = axs[0,2])
         self.design_distribution(value='chamber_floor_elevation', ax_ = axs[1,0])
         self.design_distribution(value='slope', ax_ = axs[1,1])
+        self.design_distribution(value='travel_time', ax_ = axs[1,2])
         self.annotate_flows_and_depths()
         f.tight_layout()
         f.savefig(self.plotdir / 'all_plots.png')
@@ -130,7 +145,8 @@ class ResultsPlotter():
     def outlet_plot(self, 
                     var: str = 'flow',
                     fid: Path | None = None,
-                    ax_ = None):
+                    ax_ = None,
+                    cutoff = pd.to_datetime('2000-01-01 03:00:00')):
         """Plot flow/flooding at outlet.
 
         If an ax is provided, plot on that ax, otherwise create a new figure and
@@ -170,6 +186,7 @@ class ResultsPlotter():
         df.value_syn.plot(ax=ax, color = 'r', linestyle = '--')
         plt.legend(['synthetic','real'])
         ax.set_xlabel('time')
+        ax.set_xlim([df.index.min(),cutoff])
         if var == 'flow':
             unit = 'l/s'
         elif var == 'flooding':
@@ -286,14 +303,21 @@ class ResultsPlotter():
         ax.plot(syn_v,syn_cdf, '--r')
         if value == 'slope':
             unit = 'm/m'
+            ax.set_xlim([min([x for x in syn_v]), 
+                         max([x for x in syn_v])])
+            ax.plot([-1/100,-1/100],[0,1],':c')
+            ax.plot([10/100,10/100],[0,1],':c')
         elif value == 'chamber_floor_elevation':
             unit = 'mASL'
+        elif value == 'travel_time':
+            unit = 's'
+            ax.set_xscale('symlog')
         else:
             unit = 'm'
         ax.set_xlabel(f'{value.title()} ({unit})')
         ax.set_ylabel('P(X <= x)')
         plt.legend(['real','synthetic'])
-
+        ax.grid(True)
         if not ax_:
             f.savefig(self.plotdir / f'{value}_{weight}_distribution.png')  
 
@@ -308,8 +332,8 @@ def calculate_slope(G: nx.Graph):
     nx.set_edge_attributes(
         G,
         {
-            (u, v, k): (G.nodes[v]['chamber_floor_elevation'] - \
-                        G.nodes[u]['chamber_floor_elevation']) / d['length']
+            (u, v, k): (G.nodes[u]['chamber_floor_elevation'] - \
+                        G.nodes[v]['chamber_floor_elevation']) / d['length']
             for u, v, k, d in G.edges(data=True, keys=True)
         },
         'slope'
@@ -336,7 +360,7 @@ def weighted_cdf(G: nx.Graph, value: str = 'diameter', weight: str = 'length'):
             {value: d[value], 'weight': d.get(weight,1)}
             for u,v,d in G.edges(data=True)
         ])
-    elif value == 'chamber_floor_elevation':
+    elif value in ['chamber_floor_elevation','travel_time']:
         data = pd.DataFrame([
                     {value: d[value], 'weight': d.get(weight,1)}
                     for u,d in G.nodes(data=True)
