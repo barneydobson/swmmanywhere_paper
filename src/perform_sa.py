@@ -12,18 +12,18 @@ from swmmanywhere_paper.src import experimenter
 from swmmanywhere_paper.src import plotting as swplt
 from swmmanywhere.preprocessing import check_bboxes
 from swmmanywhere.swmmanywhere import load_config
-
+from swmmanywhere.metric_utilities import metrics
 # %% [markdown]
 # ## Initialise directories and load results
 # %%
 # Load the configuration file and extract relevant data
 for project in [ "cranbrook_node_1439.1",
+                "bellinge_G73F000_G72F120_l1",
+
                 "bellinge_G80F390_G80F380_l1",
                 "bellinge_G72F800_G72F050_l1",
-                "bellinge_G73F000_G72F120_l1",
                 "bellinge_G62F060_G61F180_l1",
                 "bellinge_G72F550_G72F010_l1",
-                
                 "bellinge_G60F61Y_G60F390_l1",
                 "bellinge_G74F150_G74F140_l1",
                 ]:
@@ -32,7 +32,6 @@ for project in [ "cranbrook_node_1439.1",
     config_path = base_dir / project / f'config.yml'
     config = load_config(config_path, validation = False)
     config['base_dir'] = base_dir / project
-    objectives = config['metric_list']
     parameters = config['parameters_to_sample']
 
     # Load the results
@@ -52,7 +51,7 @@ for project in [ "cranbrook_node_1439.1",
 
     df = df.sort_values(by = 'iter')
 
-    objectives = set(objectives).intersection(df.columns)
+    objectives = df.columns.intersection(metrics.keys())
 
     # Make a directory to store plots in
     plot_fid = results_dir.parent / 'plots'
@@ -124,4 +123,4 @@ for project in [ "cranbrook_node_1439.1",
 
     # Heatmap of sensitivity indices    
     for r_, groups in zip([rg,ri],  ['groups','parameters']):
-        swplt.heatmaps(r_, plot_fid / f'heatmap_{groups}_indices.png')
+        swplt.heatmaps(r_, plot_fid / f'heatmap_{groups}_indices.png',problem)
