@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 from SALib.analyze import sobol
 from tqdm import tqdm
@@ -17,7 +18,7 @@ from swmmanywhere.metric_utilities import metrics
 # ## Initialise directories and load results
 # %%
 # Load the configuration file and extract relevant data
-for project in [ "cranbrook_node_1439.1",
+projects = [ "cranbrook_node_1439.1",
                 "bellinge_G73F000_G72F120_l1",
 
                 "bellinge_G80F390_G80F380_l1",
@@ -26,7 +27,13 @@ for project in [ "cranbrook_node_1439.1",
                 "bellinge_G72F550_G72F010_l1",
                 "bellinge_G60F61Y_G60F390_l1",
                 "bellinge_G74F150_G74F140_l1",
-                ]:
+                "bellinge_G80F390_G80F380_l1",
+                "bellinge_G72F800_G72F050_l1",
+                "bellinge_G73F000_G72F120_l1",
+                
+                #'cranbrook_formatted_largesample',
+                ]
+for project in projects:
 
     base_dir = Path.home() / "Documents" / "data" / "swmmanywhere"
     config_path = base_dir / project / f'config.yml'
@@ -44,11 +51,11 @@ for project in [ "cranbrook_node_1439.1",
     nprocs = len(fids)
 
     # Concatenate the results
-    df = pd.concat(dfs)
+    df = pd.concat(dfs).reset_index(drop=True)
 
     df = df.loc[:,~df.columns.str.contains('subcatchment')]
     df = df.drop('bias_flood_depth',axis=1)
-
+    df[df == np.inf] = None
     df = df.sort_values(by = 'iter')
 
     objectives = df.columns.intersection(metrics.keys())
@@ -62,7 +69,9 @@ for project in [ "cranbrook_node_1439.1",
     # %%
     # Highlight the behavioural indices 
     # (i.e., KGE, NSE, PBIAS are in some preferred range)
-    behavioral_indices = swplt.create_behavioral_indices(df)
+    behavioral_indices = swplt.create_behavioral_indices(df,
+                                                         objectives)
+
 
     # Plot the objectives
     swplt.plot_objectives(df, 
@@ -70,6 +79,7 @@ for project in [ "cranbrook_node_1439.1",
                             objectives, 
                             behavioral_indices,
                             plot_fid)
+
 
     # %% [markdown]
     # ## Perform Sensitivity Analysis
