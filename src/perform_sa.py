@@ -26,6 +26,7 @@ projects = [ "cranbrook_node_1439.1",
                 "bellinge_G62F060_G61F180_l1",
                 "bellinge_G72F550_G72F010_l1",
                 "bellinge_G60F61Y_G60F390_l1",
+
                 "bellinge_G74F150_G74F140_l1",
                 "bellinge_G80F390_G80F380_l1",
                 "bellinge_G72F800_G72F050_l1",
@@ -35,7 +36,7 @@ projects = [ "cranbrook_node_1439.1",
                 ]
 for project in projects:
 
-    base_dir = Path.home() / "Documents" / "data" / "swmmanywhere"
+    base_dir = Path.home() / "Documents" / "data" / "swmmanywhere" / 'trim_experiment'
     config_path = base_dir / project / f'config.yml'
     config = load_config(config_path, validation = False)
     config['base_dir'] = base_dir / project
@@ -54,12 +55,33 @@ for project in projects:
     df = pd.concat(dfs).reset_index(drop=True)
 
     df = df.loc[:,~df.columns.str.contains('subcatchment')]
+    df = df.loc[:,~df.columns.str.contains('grid')]
     df = df.drop('bias_flood_depth',axis=1)
     df[df == np.inf] = None
     df = df.sort_values(by = 'iter')
+    
+    # Clip anoms
+    for obj in ['outlet_kge_flooding', 'outlet_nse_flooding', 'outlet_nse_flow', 'outlet_kge_flow']:
+        df.loc[df[obj] < -5, obj] = -5
 
+
+    # Format order
     objectives = df.columns.intersection(metrics.keys())
+    obj_grps = ['flow','flooding','outlet']
+    objectives = pd.Series(objectives.rename('objective')).reset_index()
+    objectives['group'] = 'graph'
+    for ix, obj in objectives.iterrows():
+        for grp in obj_grps:
+            if grp in obj['objective']:
+                objectives.loc[ix,'group'] = grp
+                break
+    objectives = objectives.sort_values(by=['group','objective']).objective
 
+    problem = experimenter.formulate_salib_problem(parameters)
+    parameters_order = pd.DataFrame([problem['names'],problem['groups']]).T
+    parameters_order.columns = ['parameter','group']
+    parameters_order = parameters_order.sort_values(by=['group','parameter']).parameter
+    
     # Make a directory to store plots in
     plot_fid = results_dir.parent / 'plots'
     plot_fid.mkdir(exist_ok=True, parents=True)
@@ -75,7 +97,7 @@ for project in projects:
 
     # Plot the objectives
     swplt.plot_objectives(df, 
-                            parameters, 
+                            parameters_order, 
                             objectives, 
                             behavioral_indices,
                             plot_fid)

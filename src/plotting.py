@@ -186,6 +186,7 @@ class ResultsPlotter():
         plt.legend(['synthetic','real'])
         ax.set_xlabel('time')
         ax.set_xlim([df.index.min(),cutoff])
+        ax.grid(True)
         if var == 'flow':
             unit = 'l/s'
         elif var == 'flooding':
@@ -403,13 +404,13 @@ def create_behavioral_indices(df: pd.DataFrame,
             df_[objective] = df_[objective].abs()
     priority_objs = ['outlet_kge_flow',
           'outlet_kge_flooding',
-          'grid_kge_flooding',
-          'grid_nse_flooding',
+        #  'grid_kge_flooding',
+         # 'grid_nse_flooding',
           'outlet_nse_flow',
           'outlet_nse_flooding',
           'outlet_relerror_flow',
           'outlet_relerror_flooding',
-          'grid_relerror_flooding'
+          #'grid_relerror_flooding'
           ]
     mask = paretoset(df_[priority_objs],
                      sense = ['max' 
@@ -437,7 +438,7 @@ def plot_objectives(df: pd.DataFrame,
     """
     n_panels = len(objectives)
     n_cols = int(n_panels**0.5)
-    if n_cols * (n_cols + 1) >= n_panels:
+    if n_cols * n_cols < n_panels:
         n_rows = n_cols + 1
     else:
         n_rows = n_cols
@@ -547,7 +548,8 @@ def setup_axes(ax: plt.Axes,
                df.loc[behavioral_indices, objective], s=2, c='r')
     
     #ax.set_yscale('symlog')
-    ax.set_title(objective.replace('_','\n'))
+    ax.set_ylabel(objective)
+    ax.set_xlabel(parameter)
     ax.grid(True)
     if 'nse' in objective:
         ax.set_ylim([0, 1])
@@ -587,17 +589,14 @@ def plot_sensitivity_indices(r_: dict[str, pd.DataFrame],
     f,axs = plt.subplots(len(objectives),1,figsize=(10,10))
     for ix, ax, (objective, r) in zip(range(len(objectives)), axs, r_.items()):
         total, first, second = r.to_df()
-        total['sp'] = (total['ST'] - first['S1'])
         barplot(total,ax=ax)
-        if ix == 0:
-            ax.set_title('Total - First')
         if ix != len(objectives) - 1:
             ax.set_xticklabels([])
         else:
             ax.set_xticklabels([x.replace('_','\n') for x in total.index], 
                                     rotation = 0)
             
-        ax.set_ylabel(objective,rotation = 0,labelpad=20)
+        ax.set_ylabel(objective.replace('_','\n'),rotation = 0,labelpad=20)
         ax.get_legend().remove()
     f.tight_layout()
     f.savefig(plot_fid)  
@@ -605,7 +604,9 @@ def plot_sensitivity_indices(r_: dict[str, pd.DataFrame],
 
 def heatmaps(r_: dict[str, pd.DataFrame],
                              plot_fid: Path,
-                             problem = None):
+                             problem = None,
+                             r2 = None,
+                             sups = ['']):
     """Plot heatmap of sensitivity indices.
 
     Args:
@@ -613,58 +614,74 @@ def heatmaps(r_: dict[str, pd.DataFrame],
             indices as produced by SALib.analyze.
         plot_fid (Path): The directory to save the plots to.
     """
-    totals = []
-    interactions = []
-    firsts = []
-    for (objective,r) in r_.items():
-        total, first, second = r.to_df()
-        interaction = total['ST'] - first['S1']
+    if r2 is not None:
+        rs = [r_,r2]
+        f,axs_ = plt.subplots(2,2,figsize=(10,10))
+        axs_ = axs_.T
+    else:
+        rs = [r_]
+        f,axs_ = plt.subplots(2,1,figsize=(10,10))
+        axs_ = [axs_]
+    for rd, axs, sup in zip(rs,axs_, sups):
+        totals = []
+        interactions = []
+        firsts = []
+        for (objective,r) in rd.items():
+            total, first, second = r.to_df()
+            interaction = total['ST'] - first['S1']
+            
+            total = total['ST'].to_dict()
+            total['objective'] = objective
+            totals.append(total)
+
+            interaction = interaction.to_dict()
+            interaction['objective'] = objective
+            interactions.append(interaction)
+
+            first = first['S1'].to_dict()
+            first['objective'] = objective
+            firsts.append(first)
+
+        totals = pd.DataFrame(totals).set_index('objective')
+        interactions = pd.DataFrame(interactions).set_index('objective')
+        firsts = pd.DataFrame(firsts).set_index('objective')
+
+        if set(problem['names']) == set(totals.columns):
+
+            df = pd.DataFrame([problem['names'],problem['groups']]).T
+            df.columns = ['parameter','group']
+            df = df.sort_values(by=['group','parameter'])
+            totals = totals[df.parameter]
+            interactions = interactions[df.parameter]
+            firsts = firsts[df.parameter]
         
-        total = total['ST'].to_dict()
-        total['objective'] = objective
-        totals.append(total)
+        obj_grps = ['flow','flooding','outlet']
+        objectives = totals.reset_index()[['objective']]
+        objectives['group'] = 'graph'
+        for ix, obj in objectives.iterrows():
+            for grp in obj_grps:
+                if grp in obj['objective']:
+                    objectives.loc[ix,'group'] = grp
+                    break
+        objectives = objectives.sort_values(by=['group','objective'])
+        totals = totals.loc[objectives['objective']]
+        totals.index.rename('ST', inplace=True)
+        interactions = interactions.loc[objectives['objective']]
+        firsts = firsts.loc[objectives['objective']]
+        firsts.index.rename('S1' , inplace=True)
+        
 
-        interaction = interaction.to_dict()
-        interaction['objective'] = objective
-        interactions.append(interaction)
+        cmap = sns.color_palette("YlOrRd", as_cmap=True)
+        cmap.set_bad(color='grey')  # Color for NaN values
+        cmap.set_under(color='#d5f5eb')  # Color for 0.0 values
 
-        first = first['S1'].to_dict()
-        first['objective'] = objective
-        firsts.append(first)
-
-    totals = pd.DataFrame(totals).set_index('objective')
-    interactions = pd.DataFrame(interactions).set_index('objective')
-    firsts = pd.DataFrame(firsts).set_index('objective')
-
-    if set(problem['names']) == set(totals.columns):
-
-        df = pd.DataFrame([problem['names'],problem['groups']]).T
-        df.columns = ['parameter','group']
-        df = df.sort_values(by=['group','parameter'])
-        totals = totals[df.parameter]
-        interactions = interactions[df.parameter]
-        firsts = firsts[df.parameter]
-    
-    obj_grps = ['flow','flooding','outlet']
-    objectives = totals.reset_index()[['objective']]
-    objectives['group'] = 'graph'
-    for ix, obj in objectives.iterrows():
-        for grp in obj_grps:
-            if grp in obj['objective']:
-                objectives.loc[ix,'group'] = grp
-                break
-    objectives = objectives.sort_values(by=['group','objective'])
-    totals = totals.loc[objectives['objective']]
-    interactions = interactions.loc[objectives['objective']]
-    firsts = firsts.loc[objectives['objective']]
-    f,axs = plt.subplots(2,1,figsize=(10,10))
-
-    cmap = sns.color_palette("YlOrRd", as_cmap=True)
-    cmap.set_bad(color='grey')  # Color for NaN values
-    cmap.set_under(color='#d5f5eb')  # Color for 0.0 values
-
-    sns.heatmap(firsts, vmin = 1/100, linewidth=0.5,ax=axs[0],cmap=cmap)
-    sns.heatmap(totals, vmin = 1/100, linewidth=0.5,ax=axs[1],cmap=cmap)
+        sns.heatmap(firsts, vmin = 1/100, linewidth=0.5,ax=axs[0],cmap=cmap)
+        axs[0].set_xticklabels([])
+        sns.heatmap(totals, vmin = 1/100, linewidth=0.5,ax=axs[1],cmap=cmap)
+        axs[0].set_title(sup)
+        if rd is not r_:
+            axs[0].set_yticklabels([])
+            axs[1].set_yticklabels([])
     f.tight_layout()
     f.savefig(plot_fid)
     plt.close(f)
