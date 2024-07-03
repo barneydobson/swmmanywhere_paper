@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 from SALib.analyze import sobol
 from scipy import stats
+from sklearn.preprocessing import MinMaxScaler
 from tqdm import tqdm
 
 from swmmanywhere.logging import logger
@@ -15,6 +16,7 @@ from swmmanywhere_paper.src import experimenter
 from swmmanywhere_paper.src import plotting as swplt
 from swmmanywhere.preprocessing import check_bboxes
 from swmmanywhere.swmmanywhere import load_config
+from swmmanywhere.metric_utilities import metrics
 
 # %% [markdown]
 # ## Initialise directories and load results
@@ -53,6 +55,7 @@ for project in projects:
     df['project'] = project
 
     df = df.loc[:,~df.columns.str.contains('subcatchment')]
+    df = df.loc[:,~df.columns.str.contains('grid')]
     df = df.drop('bias_flood_depth',axis=1)
     df[df == np.inf] = None
     df = df.sort_values(by = 'iter')
@@ -61,11 +64,26 @@ for project in projects:
 
 df = pd.concat(dfp)
 df = df.reset_index(drop=True)
+for obj in ['outlet_kge_flooding', 'outlet_nse_flooding', 'outlet_nse_flow', 'outlet_kge_flow']:
+    df.loc[df[obj] < -5, obj] = -5
+
+
+objectives = df.columns.intersection(metrics.keys())
+obj_grps = ['flow','flooding','outlet']
+objectives = pd.Series(objectives.rename('objective')).reset_index()
+objectives['group'] = 'graph'
+for ix, obj in objectives.iterrows():
+    for grp in obj_grps:
+        if grp in obj['objective']:
+            objectives.loc[ix,'group'] = grp
+            break
+objectives = objectives.sort_values(by=['group','objective'])
+
 plot_fid = results_dir.parent / 'plots'
 
 n_panels = len(parameters)
 n_cols = int(n_panels**0.5)
-if n_cols * (n_cols + 1) >= n_panels:
+if n_cols * n_cols < n_panels:
     n_rows = n_cols + 1
 else:
     n_rows = n_cols
@@ -114,11 +132,11 @@ for objective in ['outlet_nse_flow',
         x = np.linspace(df[parameter].min(), df[parameter].max(), 100)
         handle = ax.plot(x, kde(x),label=objective)
 
-        ax.fill_between(x,
-                         bounds[parameter][0],
-                         bounds[parameter][1],
-                         color = 'gray',
-                         alpha = 0.1)
+        #ax.fill_between(x,
+        #                 bounds[parameter][0],
+        #                 bounds[parameter][1],
+        #                 color = 'gray',
+        #                 alpha = 0.1)
         ax.set_title(parameter.replace('_','\n'))
         ax.grid(True)
         hl[objective] = handle
@@ -127,42 +145,61 @@ axs[-1,-1].legend(handles=[x[0] for x in hl.values()])
 fig.tight_layout()
 fig.savefig(plot_fid / 'parameter_distributions_byobjective.png')
 # By objective - one projects
-fig, axs = plt.subplots(n_rows, n_cols, figsize=(10, 10))
-hl = {}
 for project in projects:
-    for objective in ['outlet_nse_flow', 
-                    'outlet_kge_flow', 
-                    'outlet_relerror_flow',
-                    'outlet_relerror_diameter',
-                    'outlet_nse_flooding',
-                    'outlet_kge_flooding',
-                    'grid_nse_flooding',
-                    'grid_kge_flooding']:
+    fig, axs = plt.subplots(n_rows, n_cols, figsize=(10, 10))
+    hl = {}
+    cols = {'flooding' : 'b',
+            'flow' : 'r',
+            'graph' : 'k',
+            'outlet' : 'g'}
+    for objective, grp in objectives.set_index('objective').group.items():
+        col = cols[grp]
+        if objective == 'outlet_relerror_diameter':
+            ls = '-.'
+            lab = 'Diameter (RE)'
+        #elif 'relerror' in objective and ('flow' in objective or 'flooding' in objective):
+        #    ls = '-.'
+        #    if 'flow' in objective:
+        #        lab = 'Flow (RE)'
+        #    else:
+        #        lab = 'Flooding (RE)'
+        else:
+            ls = '-'
+            if grp == 'outlet':
+                lab = 'Design metric (RE/KS)'
+            elif grp == 'flow':
+                lab = 'Flow (NSE/KGE/RE)'
+            elif grp == 'flooding':
+                lab = 'Flooding (NSE/KGE/RE)'
+            else:
+                lab = 'Graph metric (-)'
         df_ = df.loc[df.project == project]
         if 'nse' in objective:
             weights = df_[objective].clip(lower=0)
         elif 'kge' in objective:
             weights = df_[objective].clip(lower=-0.41) + 0.41
         elif 'relerror' in objective:
-            weights = df_[objective].abs()
+            weights = 1 - df_[objective].abs().clip(upper=1.0)
+        else:
+            weights = pd.Series([x[0] for x in MinMaxScaler().fit_transform(-df_[[objective]])])
         
-        if weights.isna().all():
+        if weights.isna().all() or weights.var() == 0:
             continue
         weights = weights.fillna(0)
             
         for parameter,ax in zip(parameters, axs.flat):
             kde = stats.gaussian_kde(df_[parameter], weights = weights)
-        
             x = np.linspace(df_[parameter].min(), df_[parameter].max(), 100)
-            handle = ax.plot(x, kde(x),label=objective)
+            
+            handle = ax.plot(x, kde(x),label=lab,color = col,ls=ls,alpha=0.7)
            # ax.fill_between(x,
            #              bounds[parameter][0],
            #              bounds[parameter][1],
            #              color = 'gray',
            #              alpha = 0.1)
-            ax.set_title(parameter.replace('_','\n'))
+            ax.set_xlabel(parameter)
             ax.grid(True)
-            hl[objective] = handle
+            hl[lab] = handle
 
     axs[-1,-1].legend(handles=[x[0] for x in hl.values()])
     fig.tight_layout()
@@ -173,26 +210,64 @@ fig, axs = plt.subplots(n_rows, n_cols, figsize=(10, 10))
 hl = {}
 
 objective = 'outlet_nse_flow'
+colls = {'cranbrook_node_1439.1' : {'col' : 'k', 'ls' : '-', 'lw' : 1},
+ 'bellinge_G62F060_G61F180_l1' : {'col' : 'r', 'ls' : '-.', 'lw' : 0.5},
+ 'bellinge_G72F550_G72F010_l1' : {'col' : 'r', 'ls' : '-', 'lw' : 0.5},
+ 'bellinge_G60F61Y_G60F390_l1'  : {'col' : 'b', 'ls' : '-.', 'lw' : 0.5},
+ 'bellinge_G74F150_G74F140_l1'  : {'col' : 'b', 'ls' : '-', 'lw' : 0.5},
+ 'bellinge_G80F390_G80F380_l1'  : {'col' : 'g', 'ls' : '-.', 'lw' : 0.5},
+ 'bellinge_G72F800_G72F050_l1'  : {'col' : 'g', 'ls' : '-', 'lw' : 0.5},
+ 'bellinge_G73F000_G72F120_l1' : {'col' : 'c', 'ls' : '-', 'lw' : 0.5}
+}
 for project in projects:
+    df_ = df.loc[df.project == project]
+    if objective == 'outlet_relerror_diameter':
+        lab = 'Diameter (RE)'
+    #elif 'relerror' in objective and ('flow' in objective or 'flooding' in objective):
+    #    ls = '-.'
+    #    if 'flow' in objective:
+    #        lab = 'Flow (RE)'
+    #    else:
+    #        lab = 'Flooding (RE)'
+    else:
+        if grp == 'outlet':
+            lab = 'Design metric (RE/KS)'
+        elif grp == 'flow':
+            lab = 'Flow (NSE/KGE/RE)'
+        elif grp == 'flooding':
+            lab = 'Flooding (NSE/KGE/RE)'
+        else:
+            lab = 'Graph metric (-)'
     df_ = df.loc[df.project == project]
     if 'nse' in objective:
         weights = df_[objective].clip(lower=0)
     elif 'kge' in objective:
         weights = df_[objective].clip(lower=-0.41) + 0.41
     elif 'relerror' in objective:
-        weights = df_[objective].abs()
-
+        weights = 1 - df_[objective].abs().clip(upper=1.0)
+    else:
+        weights = pd.Series([x[0] for x in MinMaxScaler().fit_transform(-df_[[objective]])])
+    
+    if weights.isna().all() or weights.var() == 0:
+        continue
+    weights = weights.fillna(0)
     for parameter,ax in zip(parameters, axs.flat):
         kde = stats.gaussian_kde(df_[parameter], weights = weights)
     
         x = np.linspace(df_[parameter].min(), df_[parameter].max(), 100)
-        handle = ax.plot(x, kde(x),label=project)
-        ax.fill_between(x,
-                         bounds[parameter][0],
-                         bounds[parameter][1],
-                         color = 'gray',
-                         alpha = 0.1)
-        ax.set_title(parameter.replace('_','\n'))
+        handle = ax.plot(x,
+                        # np.cumsum(kde(x)) / sum(kde(x)),
+                        kde(x),
+                         label=project,
+                         color = colls[project]['col'],
+                         ls = colls[project]['ls'],
+                         lw = 1)
+        #ax.fill_between(x,
+        #                 bounds[parameter][0],
+        #                 bounds[parameter][1],
+        #                 color = 'gray',
+        #                 alpha = 0.1)
+        ax.set_xlabel(parameter)
         ax.grid(True)
         hl[project] = handle
 
