@@ -6,7 +6,7 @@ import networkx as nx
 from swmmanywhere.graph_utilities import register_graphfcn, BaseGraphFunction
 from swmmanywhere import geospatial_utilities as go
 from swmmanywhere.metric_utilities import nodes_to_subs
-from swmmanywhere.parameters import FilePaths
+from swmmanywhere.filepaths import FilePaths
 
 @register_graphfcn
 class trim_to_real(BaseGraphFunction):
@@ -16,7 +16,7 @@ class trim_to_real(BaseGraphFunction):
                  addresses: FilePaths,
                  **kwargs) -> nx.Graph:
         """"""
-        real_subs = gpd.read_file(addresses.real_subcatchments)
+        real_subs = gpd.read_file(addresses.get_path('real_subcatchments'))
         nodes_joined = nodes_to_subs(G, real_subs)
         G = G.subgraph(nodes_joined.id).copy()
         return G
@@ -29,8 +29,8 @@ class trim_to_real_subs(BaseGraphFunction):
                  addresses: FilePaths,
                  **kwargs) -> nx.Graph:
         """"""
-        real_subs = gpd.read_file(addresses.real_subcatchments)
-        syn_subs = gpd.read_file(addresses.subcatchments)
+        real_subs = gpd.read_file(addresses.get_path('real_subcatchments'))
+        syn_subs = gpd.read_file(addresses.model_paths.subcatchments)
         subs_gdf = syn_subs.clip(real_subs)
         
         # sort multi-geometries
@@ -43,20 +43,20 @@ class trim_to_real_subs(BaseGraphFunction):
         subs_gdf = go.attach_unconnected_subareas(subs_gdf, new_geoms)
 
         # Calculate runoff coefficient (RC)
-        if addresses.building.suffix in ('.geoparquet','.parquet'):
-            buildings = gpd.read_parquet(addresses.building)
+        if addresses.bbox_paths.building.suffix in ('.geoparquet','.parquet'):
+            buildings = gpd.read_parquet(addresses.bbox_paths.building)
         else:
-            buildings = gpd.read_file(addresses.building)
-        if addresses.streetcover.suffix in ('.geoparquet','.parquet'):
-            streetcover = gpd.read_parquet(addresses.streetcover)
+            buildings = gpd.read_file(addresses.bbox_paths.building)
+        if addresses.model_paths.streetcover.suffix in ('.geoparquet','.parquet'):
+            streetcover = gpd.read_parquet(addresses.model_paths.streetcover)
         else:
-            streetcover = gpd.read_file(addresses.streetcover)
+            streetcover = gpd.read_file(addresses.model_paths.streetcover)
 
         subs_rc = go.derive_rc(subs_gdf, buildings, streetcover)
 
         # Write subs
         # TODO - could just attach subs to nodes where each node has a list of subs
-        subs_rc.to_file(addresses.subcatchments, driver='GeoJSON')
+        subs_rc.to_file(addresses.model_paths.subcatchments, driver='GeoJSON')
 
         # Assign contributing area
         imperv_lookup = subs_rc.set_index('id').impervious_area.to_dict()
