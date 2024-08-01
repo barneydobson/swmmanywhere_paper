@@ -374,7 +374,7 @@ rich==13.7.1
     # via pymc
 rioxarray==0.15.5
     # via swmmanywhere
-rpds-py==0.18.1
+rpds-py==0.19.1
     # via
     #   jsonschema
     #   referencing
