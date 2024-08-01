@@ -401,7 +401,7 @@ scipy==1.13.1
     #   xarray-einstats
 seaborn==0.13.2
     # via swmmanywhere_paper (pyproject.toml)
-shapely==2.0.4
+shapely==2.0.5
     # via
     #   geopandas
     #   osmnx
