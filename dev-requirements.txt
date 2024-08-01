@@ -284,7 +284,7 @@ pre-commit==3.7.1
     # via swmmanywhere_paper (pyproject.toml)
 pyarrow==16.1.0
     # via swmmanywhere
-pydantic==2.7.3
+pydantic==2.8.2
     # via
     #   planetary-computer
     #   swmmanywhere

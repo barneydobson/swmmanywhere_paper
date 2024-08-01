@@ -247,7 +247,7 @@ planetary-computer==1.0.0
     # via swmmanywhere
 pyarrow==16.1.0
     # via swmmanywhere
-pydantic==2.7.3
+pydantic==2.8.2
     # via
     #   planetary-computer
     #   swmmanywhere
