@@ -27,6 +27,7 @@ dependencies = [
   "seaborn",
   "pymc",
   "scikit-learn",
+  "paretoset",
   "swmmanywhere@ git+https://github.com/ImperialCollegeLondon/SWMManywhere.git",
 ]
 [project.optional-dependencies]

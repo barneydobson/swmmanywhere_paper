@@ -19,12 +19,12 @@ from scipy import stats
 from swmmanywhere import metric_utilities
 from swmmanywhere.geospatial_utilities import graph_to_geojson
 from swmmanywhere.graph_utilities import load_graph
-from swmmanywhere.parameters import (
-    MetricEvaluation, 
-    filepaths_from_yaml
-)
+from swmmanywhere.parameters import MetricEvaluation
+from swmmanywhere.filepaths import filepaths_from_yaml
 from swmmanywhere.swmmanywhere import load_config
 from swmmanywhere_paper.src import utilities
+from swmmanywhere_paper.src.mappings import metric_mapping, param_mapping
+
 class ResultsPlotter():
     """Plotter object."""
     def __init__(self, 
@@ -602,10 +602,9 @@ def plot_sensitivity_indices(r_: dict[str, pd.DataFrame],
     f.savefig(plot_fid)  
     plt.close(f)
 
-def heatmaps(r_: dict[str, pd.DataFrame],
+def heatmaps(rs: list[dict[str, pd.DataFrame]],
                              plot_fid: Path,
                              problem = None,
-                             r2 = None,
                              sups = ['']):
     """Plot heatmap of sensitivity indices.
 
@@ -614,9 +613,8 @@ def heatmaps(r_: dict[str, pd.DataFrame],
             indices as produced by SALib.analyze.
         plot_fid (Path): The directory to save the plots to.
     """
-    if r2 is not None:
-        rs = [r_,r2]
-        f,axs_ = plt.subplots(2,2,figsize=(10,10))
+    if isinstance(rs, list):
+        f,axs_ = plt.subplots(2,len(rs),figsize=(14,10))
         axs_ = axs_.T
     else:
         rs = [r_]
@@ -674,14 +672,28 @@ def heatmaps(r_: dict[str, pd.DataFrame],
         cmap = sns.color_palette("YlOrRd", as_cmap=True)
         cmap.set_bad(color='grey')  # Color for NaN values
         cmap.set_under(color='#d5f5eb')  # Color for 0.0 values
+        
 
-        sns.heatmap(firsts, vmin = 1/100, linewidth=0.5,ax=axs[0],cmap=cmap)
+        sns.heatmap(firsts.rename(columns = param_mapping,
+                                  index = metric_mapping), 
+                                  vmin = 1/100, 
+                                  linewidth=0.5,
+                                  ax=axs[0],
+                                  cmap=cmap,
+                                  cbar = False,
+                                  vmax = 1.0)
         axs[0].set_xticklabels([])
-        sns.heatmap(totals, vmin = 1/100, linewidth=0.5,ax=axs[1],cmap=cmap)
+        sns.heatmap(totals.rename(columns = param_mapping,
+                                  index = metric_mapping), vmin = 1/100, linewidth=0.5,ax=axs[1],cmap=cmap,cbar = False,vmax = 1.0)
         axs[0].set_title(sup)
-        if rd is not r_:
+        if rd is not rs[0]:
             axs[0].set_yticklabels([])
             axs[1].set_yticklabels([])
-    f.tight_layout()
+            axs[0].set_ylabel('')
+            axs[1].set_ylabel('')
+    cbar_ax = f.add_axes([0.9, 0.15, 0.02, 0.7])  # position [left, bottom, width, height]
+    plt.subplots_adjust(right=0.85)
+    f.colorbar(axs[1].collections[0], cax=cbar_ax)
+    # f.tight_layout()
     f.savefig(plot_fid)
     plt.close(f)

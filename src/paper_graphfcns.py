@@ -6,7 +6,7 @@ import networkx as nx
 from swmmanywhere.graph_utilities import register_graphfcn, BaseGraphFunction
 from swmmanywhere import geospatial_utilities as go
 from swmmanywhere.metric_utilities import nodes_to_subs
-from swmmanywhere.parameters import FilePaths
+from swmmanywhere.filepaths import FilePaths
 
 @register_graphfcn
 class trim_to_real(BaseGraphFunction):

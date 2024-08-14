@@ -134,7 +134,7 @@ kiwisolver==1.4.5
     # via matplotlib
 lazy-loader==0.4
     # via scikit-image
-llvmlite==0.42.0
+llvmlite>=0.42.0
     # via numba
 logical-unification==0.4.6
     # via

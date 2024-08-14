@@ -11,7 +11,7 @@ from tqdm import tqdm
 from swmmanywhere.logging import logger
 from swmmanywhere_paper.src import experimenter
 from swmmanywhere_paper.src import plotting as swplt
-from swmmanywhere.preprocessing import check_bboxes
+from swmmanywhere.filepaths import check_bboxes
 from swmmanywhere.swmmanywhere import load_config
 from swmmanywhere.metric_utilities import metrics
 # %% [markdown]
@@ -104,4 +104,4 @@ for project in projects:
     
     ris.append(ri)
 
-swplt.heatmaps(ris[0], plot_fid / f'heatmap_side.png',problem,ris[1], projects)
+swplt.heatmaps(ris, plot_fid / f'heatmap_side.png',problem,projects)
