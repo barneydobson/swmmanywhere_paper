@@ -8,16 +8,17 @@ import numpy as np
 import pandas as pd
 from SALib.analyze import sobol
 from scipy import stats
+from scipy.integrate import cumulative_trapezoid as cumtrapz
 from sklearn.preprocessing import MinMaxScaler
 from tqdm import tqdm
 
 from swmmanywhere.logging import logger
 from swmmanywhere_paper.src import experimenter
 from swmmanywhere_paper.src import plotting as swplt
-from swmmanywhere.preprocessing import check_bboxes
+from swmmanywhere.filepaths import check_bboxes
 from swmmanywhere.swmmanywhere import load_config
 from swmmanywhere.metric_utilities import metrics
-
+from swmmanywhere_paper.src.mappings import metric_mapping, param_mapping
 # %% [markdown]
 # ## Initialise directories and load results
 # %%
@@ -37,7 +38,7 @@ projects = ["cranbrook_node_1439.1",
 dfp = []
 for project in projects:
 
-    base_dir = Path.home() / "Documents" / "data" / "swmmanywhere"
+    base_dir = Path.home() / "Documents" / "data" / "swmmanywhere" / "notrim_experiment"
     config_path = base_dir / project / f'config.yml'
     config = load_config(config_path, validation = False)
     config['base_dir'] = base_dir / project
@@ -88,29 +89,41 @@ if n_cols * n_cols < n_panels:
 else:
     n_rows = n_cols
 
+n_cols = 4
+n_rows = 5
+
+par_mapping = {
+    0: ["node_merge_distance", "outlet_length", "max_street_length", "river_buffer_distance"],
+    1: ["chahinian_slope_scaling","chahinian_angle_scaling","length_scaling", "contributing_area_scaling"],
+    2: ["chahinian_slope_exponent","chahinian_angle_exponent", "length_exponent", "contributing_area_exponent"],
+    3: ["max_fr","min_v","max_v", "min_depth"],
+    4: ["max_depth","precipitation",None, None],
+}
+
 # Perform bootstrapping (for 'outlet_nse_flow')
-n_bootstraps = 50
-frac = 0.1
-objective = 'outlet_nse_flow'
-bootstrap_results = {p : [] for p in parameters}
-for n in tqdm(range(n_bootstraps)):
-    ix = df.sample(frac=frac, replace=True).index
-    if 'nse' in objective:
-        weights = df.loc[ix,objective].clip(lower=0)
-    elif 'kge' in objective:
-        weights = df.loc[ix,objective].clip(lower=-0.41) + 0.41
-    elif 'relerror' in objective:
-        weights = df.loc[ix,objective].abs()
+if False:
+    n_bootstraps = 50
+    frac = 0.1
+    objective = 'outlet_nse_flow'
+    bootstrap_results = {p : [] for p in parameters}
+    for n in tqdm(range(n_bootstraps)):
+        ix = df.sample(frac=frac, replace=True).index
+        if 'nse' in objective:
+            weights = df.loc[ix,objective].clip(lower=0)
+        elif 'kge' in objective:
+            weights = df.loc[ix,objective].clip(lower=-0.41) + 0.41
+        elif 'relerror' in objective:
+            weights = df.loc[ix,objective].abs()
 
-    for parameter in parameters:
-        kde = stats.gaussian_kde(df.loc[ix,parameter], weights = weights)
-    
-        x = np.linspace(df[parameter].min(), df[parameter].max(), 100)
-        bootstrap_results[parameter].append(kde(x))
+        for parameter in parameters:
+            kde = stats.gaussian_kde(df.loc[ix,parameter], weights = weights)
+        
+            x = np.linspace(df[parameter].min(), df[parameter].max(), 100)
+            bootstrap_results[parameter].append(kde(x))
 
-# Calculate bounds
-bounds = {k : (np.array(x).min(axis=0), np.array(x).max(axis=0)) 
-            for k,x in bootstrap_results.items()}
+    # Calculate bounds
+    bounds = {k : (np.array(x).min(axis=0), np.array(x).max(axis=0)) 
+                for k,x in bootstrap_results.items()}
 
 # By objective - all projects
 fig, axs = plt.subplots(n_rows, n_cols, figsize=(10, 10))
@@ -125,21 +138,24 @@ for objective in ['outlet_nse_flow',
         weights = df[objective].clip(lower=-0.41) + 0.41
     elif 'relerror' in objective:
         weights = df[objective].abs()
+    for idx, objs in par_mapping.items():
+        for ax, parameter in zip(axs[idx], objs):
+            if parameter is None:
+                ax.axis('off')
+                continue
+            kde = stats.gaussian_kde(df[parameter], weights = weights)
+        
+            x = np.linspace(df[parameter].min(), df[parameter].max(), 100)
+            handle = ax.plot(x, kde(x),label=metric_mapping[objective])
 
-    for parameter,ax in zip(parameters, axs.flat):
-        kde = stats.gaussian_kde(df[parameter], weights = weights)
-    
-        x = np.linspace(df[parameter].min(), df[parameter].max(), 100)
-        handle = ax.plot(x, kde(x),label=objective)
-
-        #ax.fill_between(x,
-        #                 bounds[parameter][0],
-        #                 bounds[parameter][1],
-        #                 color = 'gray',
-        #                 alpha = 0.1)
-        ax.set_title(parameter.replace('_','\n'))
-        ax.grid(True)
-        hl[objective] = handle
+            #ax.fill_between(x,
+            #                 bounds[parameter][0],
+            #                 bounds[parameter][1],
+            #                 color = 'gray',
+            #                 alpha = 0.1)
+            ax.set_title(param_mapping[parameter])
+            ax.grid(True)
+            hl[objective] = handle
 
 axs[-1,-1].legend(handles=[x[0] for x in hl.values()])
 fig.tight_layout()
@@ -187,19 +203,28 @@ for project in projects:
             continue
         weights = weights.fillna(0)
             
-        for parameter,ax in zip(parameters, axs.flat):
-            kde = stats.gaussian_kde(df_[parameter], weights = weights)
-            x = np.linspace(df_[parameter].min(), df_[parameter].max(), 100)
-            
-            handle = ax.plot(x, kde(x),label=lab,color = col,ls=ls,alpha=0.7)
-           # ax.fill_between(x,
-           #              bounds[parameter][0],
-           #              bounds[parameter][1],
-           #              color = 'gray',
-           #              alpha = 0.1)
-            ax.set_xlabel(parameter)
-            ax.grid(True)
-            hl[lab] = handle
+        for idx, objs in par_mapping.items():
+            for ax, parameter in zip(axs[idx], objs):
+                if parameter is None:
+                    ax.axis('off')
+                    continue
+                kde = stats.gaussian_kde(df_[parameter], weights = weights)
+                x = np.linspace(df_[parameter].min(), df_[parameter].max(), 100)
+                
+                # handle = ax.plot(x, kde(x),label=lab,color = col,ls=ls,alpha=0.7)
+                handle = ax.plot(x[1:], cumtrapz(kde(x), x),label=lab,color = col,ls=ls,alpha=0.7)
+            # ax.fill_between(x,
+            #              bounds[parameter][0],
+            #              bounds[parameter][1],
+            #              color = 'gray',
+            #              alpha = 0.1)
+                ax.set_xlabel(param_mapping[parameter])
+                ax.grid(True)
+                if ax is not axs[idx][0]:
+                    ax.set_yticklabels([])
+                else:
+                    ax.set_ylabel('CDF(x)')
+                hl[lab] = handle
 
     axs[-1,-1].legend(handles=[x[0] for x in hl.values()])
     fig.tight_layout()
@@ -251,25 +276,31 @@ for project in projects:
     if weights.isna().all() or weights.var() == 0:
         continue
     weights = weights.fillna(0)
-    for parameter,ax in zip(parameters, axs.flat):
-        kde = stats.gaussian_kde(df_[parameter], weights = weights)
-    
-        x = np.linspace(df_[parameter].min(), df_[parameter].max(), 100)
-        handle = ax.plot(x,
-                        # np.cumsum(kde(x)) / sum(kde(x)),
-                        kde(x),
-                         label=project,
-                         color = colls[project]['col'],
-                         ls = colls[project]['ls'],
-                         lw = 1)
-        #ax.fill_between(x,
-        #                 bounds[parameter][0],
-        #                 bounds[parameter][1],
-        #                 color = 'gray',
-        #                 alpha = 0.1)
-        ax.set_xlabel(parameter)
-        ax.grid(True)
-        hl[project] = handle
+    for idx, objs in par_mapping.items():
+        for ax, parameter in zip(axs[idx], objs):
+            if parameter is None:
+                ax.axis('off')
+                continue
+            kde = stats.gaussian_kde(df_[parameter], weights = weights)
+        
+            x = np.linspace(df_[parameter].min(), df_[parameter].max(), 100)
+            handle = ax.plot(x[1:], cumtrapz(kde(x), x),
+                            label=project,
+                            color = colls[project]['col'],
+                            ls = colls[project]['ls'],
+                            lw = 1)
+            #ax.fill_between(x,
+            #                 bounds[parameter][0],
+            #                 bounds[parameter][1],
+            #                 color = 'gray',
+            #                 alpha = 0.1)
+            ax.set_xlabel(param_mapping[parameter])
+            ax.grid(True)
+            if ax is not axs[idx][0]:
+                ax.set_yticklabels([])
+            else:
+                ax.set_ylabel('CDF(x)')
+            hl[project] = handle
 
 axs[-1,-1].legend(handles=[x[0] for x in hl.values()])
 fig.tight_layout()

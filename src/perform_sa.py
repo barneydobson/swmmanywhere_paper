@@ -11,7 +11,7 @@ from tqdm import tqdm
 from swmmanywhere.logging import logger
 from swmmanywhere_paper.src import experimenter
 from swmmanywhere_paper.src import plotting as swplt
-from swmmanywhere.preprocessing import check_bboxes
+from swmmanywhere.filepaths import check_bboxes
 from swmmanywhere.swmmanywhere import load_config
 from swmmanywhere.metric_utilities import metrics
 # %% [markdown]
@@ -19,24 +19,12 @@ from swmmanywhere.metric_utilities import metrics
 # %%
 # Load the configuration file and extract relevant data
 projects = [ "cranbrook_node_1439.1",
-                "bellinge_G73F000_G72F120_l1",
-
-                "bellinge_G80F390_G80F380_l1",
-                "bellinge_G72F800_G72F050_l1",
-                "bellinge_G62F060_G61F180_l1",
-                "bellinge_G72F550_G72F010_l1",
-                "bellinge_G60F61Y_G60F390_l1",
-
-                "bellinge_G74F150_G74F140_l1",
-                "bellinge_G80F390_G80F380_l1",
-                "bellinge_G72F800_G72F050_l1",
-                "bellinge_G73F000_G72F120_l1",
-                
-                #'cranbrook_formatted_largesample',
-                ]
+             "bellinge_G60F61Y_G60F390_l1",
+             "bellinge_G72F800_G72F050_l1"
+            ]
 for project in projects:
 
-    base_dir = Path.home() / "Documents" / "data" / "swmmanywhere" / 'trim_experiment'
+    base_dir = Path.home() / "Documents" / "data" / "swmmanywhere" / 'notrim_experiment'
     config_path = base_dir / project / f'config.yml'
     config = load_config(config_path, validation = False)
     config['base_dir'] = base_dir / project
@@ -97,9 +85,9 @@ for project in projects:
 
     # Plot the objectives
     swplt.plot_objectives(df, 
-                            parameters_order, 
+                            ['node_merge_distance'], 
                             objectives, 
-                            behavioral_indices,
+                            pd.Series([False] * df.shape[0]),
                             plot_fid)
 
 

@@ -14,17 +14,19 @@ from swmmanywhere_paper.src import plotting as swplt
 from swmmanywhere.filepaths import check_bboxes
 from swmmanywhere.swmmanywhere import load_config
 from swmmanywhere.metric_utilities import metrics
+
 # %% [markdown]
 # ## Initialise directories and load results
 # %%
 # Load the configuration file and extract relevant data
 projects = [ "cranbrook_node_1439.1",
-            "bellinge_G73F000_G72F120_l1",
+             "bellinge_G60F61Y_G60F390_l1",
+             "bellinge_G72F800_G72F050_l1"
             ]
 ris = []
 for project in projects:
 
-    base_dir = Path.home() / "Documents" / "data" / "swmmanywhere"
+    base_dir = Path.home() / "Documents" / "data" / "swmmanywhere" / 'notrim_experiment'
     config_path = base_dir / project / f'config.yml'
     config = load_config(config_path, validation = False)
     config['base_dir'] = base_dir / project
@@ -45,6 +47,7 @@ for project in projects:
     df = df.loc[:,~df.columns.str.contains('subcatchment')]
     df = df.loc[:,~df.columns.str.contains('grid')]
     df = df.drop('bias_flood_depth',axis=1)
+
     df[df == np.inf] = None
     df = df.sort_values(by = 'iter')
 
@@ -74,7 +77,7 @@ for project in projects:
     plot_fid = results_dir.parent / 'plots'
     plot_fid.mkdir(exist_ok=True, parents=True)
 
-        # Formulate the SALib problem
+    # Formulate the SALib problem
     problem = experimenter.formulate_salib_problem(parameters)
 
     # Calculate any missing samples
@@ -90,6 +93,13 @@ for project in projects:
     # Perform the sensitivity analysis for groups
     problem['outputs'] = objectives
 
+    swplt.plot_objectives(df, 
+                            parameters_order, 
+                            objectives,
+                            pd.Series([False] * df.shape[0],
+                                      index = df.index),
+                            plot_fid)
+
     # Perform the sensitivity analysis for parameters
     problemi = problem.copy()
     del problemi['groups']
@@ -104,4 +114,4 @@ for project in projects:
     
     ris.append(ri)
 
-swplt.heatmaps(ris, plot_fid / f'heatmap_side.png',problem,projects)
+swplt.heatmaps(ris, plot_fid / f'heatmap_side.svg',problem,projects)

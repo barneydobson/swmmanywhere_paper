@@ -1,12 +1,12 @@
 metric_mapping = {
 "outlet_relerror_length": "mRL",
 "outlet_relerror_npipes": "mRP",
+"outlet_relerror_nmanholes": "mRM",
 "nc_deltacon0": "mD0",
 "nc_laplacian_dist": "mLD",
 "nc_vertex_edge_distance": "mD",
 "kstest_edge_betweenness": "mKE",
 "kstest_betweenness": "mKN",
-"outlet_relerror_nmanholes": "mRM",
 "outlet_relerror_diameter": "mRD",
 "outlet_kstest_diameters": "mKD",
 "outlet_nse_flow" : "mNQ",
