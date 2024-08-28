@@ -5,7 +5,7 @@
 # subjob's index within the array
 
 ## All subjobs run independently of one another
-source sa_base/bin/activate
+source /rds/general/user/bdobson/home/swmmanywhere_paper/src/sa_base/bin/activate
 
 # Change to the submission directory
 cd $PBS_O_WORKDIR
