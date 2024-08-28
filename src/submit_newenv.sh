@@ -19,6 +19,7 @@ source $env_name/bin/activate
 
 cd /rds/general/user/bdobson/home/swmmanywhere_paper
 pip install -e .
+cd /rds/general/user/bdobson/home/swmmanywhere_paper/src
 
 # Change to the submission directory
 cd $PBS_O_WORKDIR
