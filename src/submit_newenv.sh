@@ -19,13 +19,12 @@ source $env_name/bin/activate
 
 cd /rds/general/user/bdobson/home/swmmanywhere_paper
 pip install -e .
-cd /rds/general/user/bdobson/home/swmmanywhere_paper/src
 
 # Change to the submission directory
 cd $PBS_O_WORKDIR
 
 # Run program, passing the index of this subjob within the array
-python experimenter.py --jobid=$PBS_ARRAY_INDEX --config_path=/rds/general/user/bdobson/ephemeral/swmmanywhere/cranbrook/cranbrook_hpc.yml
+python src/experimenter.py --jobid=$PBS_ARRAY_INDEX --config_path=/rds/general/user/bdobson/ephemeral/swmmanywhere/cranbrook/cranbrook_hpc.yml
 
 deactivate 
 rm -rf $env_name
