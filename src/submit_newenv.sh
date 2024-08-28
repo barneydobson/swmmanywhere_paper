@@ -7,12 +7,14 @@
 ## All subjobs run independently of one another
 
 
-# Load modules for any applications
 module load anaconda3/personal
-source activate swmmanywhere
+source activate sa
+
 env_name="env_${PBS_ARRAY_INDEX}"
 python -m venv $env_name
-source deactivate
+
+conda deactivate
+
 source $env_name/bin/activate
 
 cd /rds/general/user/bdobson/home/swmmanywhere_paper
@@ -22,6 +24,7 @@ pip install -e .
 cd $PBS_O_WORKDIR
 
 # Run program, passing the index of this subjob within the array
-python experimenter.py --jobid=$PBS_ARRAY_INDEX --nproc=7000 --config_path=/rds/general/user/bdobson/ephemeral/swmmanywhere/cranbrook/cranbrook_hpc.yml
+python experimenter.py --jobid=$PBS_ARRAY_INDEX --config_path=/rds/general/user/bdobson/ephemeral/swmmanywhere/cranbrook/cranbrook_hpc.yml
 
-deactivate rm -rf ,$env_name
+deactivate 
+rm -rf $env_name
