@@ -422,7 +422,7 @@ threadpoolctl==3.5.0
     # via
     #   pymc
     #   scikit-learn
-tifffile==2024.5.22
+tifffile==2024.8.30
     # via scikit-image
 toolz==0.12.1
     # via
