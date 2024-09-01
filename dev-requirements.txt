@@ -78,7 +78,7 @@ cons==0.4.6
     #   pytensor
 contourpy==1.2.1
     # via matplotlib
-coverage[toml]==7.5.3
+coverage[toml]==7.6.1
     # via pytest-cov
 cramjam==2.8.3
     # via fastparquet
