@@ -387,7 +387,7 @@ typing-extensions==4.12.2
     #   pytensor
 tzdata==2024.1
     # via pandas
-urllib3==2.2.1
+urllib3==2.2.2
     # via requests
 win32-setctime==1.1.0
     # via loguru
