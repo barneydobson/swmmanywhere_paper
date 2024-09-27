@@ -7,7 +7,6 @@ from pathlib import Path
 import geopandas as gpd
 import networkx as nx
 
-from swmmanywhere.swmmanywhere import load_config
 from swmmanywhere import parameters
 from swmmanywhere.geospatial_utilities import graph_to_geojson
 from swmmanywhere.graph_utilities import load_graph, save_graph
@@ -131,22 +130,23 @@ def subselect_cut(base_dir, project, cut, buffer = 1/1000):
     with open(new_dir / 'real_bbox.json', 'w') as info_file:
         json.dump(bounding_box_info, info_file, indent=2)
     return bbox
-# Whole model
-project = 'bellinge'
-# Define where to cut the model
-if project == 'cranbrook':
-    query_arc = 'node_1439.1'
-elif project == 'bellinge':
-    for cut in [
-        'G60F61Y_G60F390_l1', # Farina 6
-        'G62F060_G61F180_l1', # Farina 5
-        'G74F150_G74F140_l1', # Farina 4
-        'G72F550_G72F010_l1', # Farina 3.1
-        'G72F800_G72F050_l1', # Farina 3.2
-        'G73F000_G72F120_l1', # Farina 2
-        'G80F390_G80F380_l1', # Farina 1
-        ]:
-        bbox = subselect_cut(
-            Path(r'C:\Users\bdobson\Documents\data\swmmanywhere'),
-            project,
-            cut)
+
+## Whole model
+#project = 'bellinge'
+## Define where to cut the model
+#if project == 'cranbrook':
+#    query_arc = 'node_1439.1'
+#elif project == 'bellinge':
+#    for cut in [
+#        'G60F61Y_G60F390_l1', # Farina 6
+#        'G62F060_G61F180_l1', # Farina 5
+#        'G74F150_G74F140_l1', # Farina 4
+#        'G72F550_G72F010_l1', # Farina 3.1
+#        'G72F800_G72F050_l1', # Farina 3.2
+#        'G73F000_G72F120_l1', # Farina 2
+#        'G80F390_G80F380_l1', # Farina 1
+#        ]:
+#        bbox = subselect_cut(
+#            Path(r'C:\Users\bdobson\Documents\data\swmmanywhere'),
+#            project,
+#            cut)
