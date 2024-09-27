@@ -14,7 +14,7 @@ from tqdm import tqdm
 from swmmanywhere.filepaths import check_bboxes
 from swmmanywhere.swmmanywhere import load_config
 from swmmanywhere.metric_utilities import metrics
-from swmmanywhere_paper.src.mappings import metric_mapping, param_mapping
+from swmmanywhere_paper.mappings import metric_mapping, param_mapping
 # %% [markdown]
 # ## Initialise directories and load results
 # %%
