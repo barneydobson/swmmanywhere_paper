@@ -7,7 +7,6 @@ from pathlib import Path
 import geopandas as gpd
 import networkx as nx
 
-from swmmanywhere.swmmanywhere import load_config
 from swmmanywhere import parameters
 from swmmanywhere.geospatial_utilities import graph_to_geojson
 from swmmanywhere.graph_utilities import load_graph, save_graph

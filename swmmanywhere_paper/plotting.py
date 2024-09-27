@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 import pandas as pd
-from paretoset import paretoset
 import seaborn as sns
 from SALib.plotting.bar import plot as barplot
 from scipy import stats
@@ -22,8 +21,8 @@ from swmmanywhere.graph_utilities import load_graph
 from swmmanywhere.parameters import MetricEvaluation
 from swmmanywhere.filepaths import filepaths_from_yaml
 from swmmanywhere.swmmanywhere import load_config
-from swmmanywhere_paper.src import utilities
-from swmmanywhere_paper.src.mappings import metric_mapping, param_mapping
+from swmmanywhere_paper import utilities
+from swmmanywhere_paper.mappings import metric_mapping, param_mapping
 
 class ResultsPlotter():
     """Plotter object."""
@@ -403,22 +402,22 @@ def create_behavioral_indices(df: pd.DataFrame,
     for objective in objectives:
         if 'relerror' in objective:
             df_[objective] = df_[objective].abs()
-    priority_objs = ['outlet_kge_flow',
-          'outlet_kge_flooding',
-        #  'grid_kge_flooding',
-         # 'grid_nse_flooding',
-          'outlet_nse_flow',
-          'outlet_nse_flooding',
-          'outlet_relerror_flow',
-          'outlet_relerror_flooding',
-          #'grid_relerror_flooding'
-          ]
-    mask = paretoset(df_[priority_objs],
-                     sense = ['max' 
-                              if any([s in o for s in ['kge','nse']])
-                              else 'min' for o in priority_objs])
+    # priority_objs = ['outlet_kge_flow',
+    #       'outlet_kge_flooding',
+    #     #  'grid_kge_flooding',
+    #      # 'grid_nse_flooding',
+    #       'outlet_nse_flow',
+    #       'outlet_nse_flooding',
+    #       'outlet_relerror_flow',
+    #       'outlet_relerror_flooding',
+    #       #'grid_relerror_flooding'
+    #       ]
+    # mask = paretoset(df_[priority_objs],
+    #                  sense = ['max' 
+    #                           if any([s in o for s in ['kge','nse']])
+    #                           else 'min' for o in priority_objs])
 
-    combined = behavioural_ind_nse & behavioural_ind_kge & behavioural_ind_relerror & mask
+    # combined = behavioural_ind_nse & behavioural_ind_kge & behavioural_ind_relerror & mask
     
     return mask
 

@@ -5,10 +5,9 @@ import json
 import os
 import sys
 from copy import deepcopy
-from pathlib import Path, PosixPath
+from pathlib import Path
 
-from swmmanywhere_paper.src.subselect import subselect_cut
-from swmmanywhere_paper.src import paper_graphfcns # noqa: E402
+from swmmanywhere_paper.subselect import subselect_cut
 from swmmanywhere import swmmanywhere
 
 os.environ['SWMMANYWHERE_VERBOSE'] = "true"

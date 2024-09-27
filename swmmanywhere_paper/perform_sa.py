@@ -9,12 +9,11 @@ from SALib.analyze import sobol
 from tqdm import tqdm
 
 from swmmanywhere.logging import logger
-from swmmanywhere_paper.src import experimenter
-from swmmanywhere_paper.src import plotting as swplt
+from swmmanywhere_paper import experimenter
+from swmmanywhere_paper import plotting as swplt
 from swmmanywhere.filepaths import check_bboxes
 from swmmanywhere.swmmanywhere import load_config
 from swmmanywhere.metric_utilities import metrics
-
 # %% [markdown]
 # ## Initialise directories and load results
 # %%
@@ -23,7 +22,6 @@ projects = [ "cranbrook_node_1439.1",
              "bellinge_G60F61Y_G60F390_l1",
              "bellinge_G72F800_G72F050_l1"
             ]
-ris = []
 for project in projects:
 
     base_dir = Path.home() / "Documents" / "data" / "swmmanywhere" / 'notrim_experiment'
@@ -47,18 +45,17 @@ for project in projects:
     df = df.loc[:,~df.columns.str.contains('subcatchment')]
     df = df.loc[:,~df.columns.str.contains('grid')]
     df = df.drop('bias_flood_depth',axis=1)
-
     df[df == np.inf] = None
     df = df.sort_values(by = 'iter')
-
+    
     # Clip anoms
-    for obj in ['outlet_kge_flooding', 'outlet_nse_flooding', 'outlet_nse_flow', 'outlet_kge_flow']:
+    for obj in ['outfall_kge_flooding', 'outfall_nse_flooding', 'outfall_nse_flow', 'outfall_kge_flow']:
         df.loc[df[obj] < -5, obj] = -5
 
 
     # Format order
     objectives = df.columns.intersection(metrics.keys())
-    obj_grps = ['flow','flooding','outlet']
+    obj_grps = ['flow','flooding','outfall']
     objectives = pd.Series(objectives.rename('objective')).reset_index()
     objectives['group'] = 'graph'
     for ix, obj in objectives.iterrows():
@@ -77,6 +74,27 @@ for project in projects:
     plot_fid = results_dir.parent / 'plots'
     plot_fid.mkdir(exist_ok=True, parents=True)
 
+    # %% [markdown]
+    # ## Plot the objectives
+    # %%
+    # Highlight the behavioural indices 
+    # (i.e., KGE, NSE, PBIAS are in some preferred range)
+    behavioral_indices = swplt.create_behavioral_indices(df,
+                                                         objectives)
+
+
+    # Plot the objectives
+    swplt.plot_objectives(df, 
+                            ['node_merge_distance'], 
+                            objectives, 
+                            pd.Series([False] * df.shape[0]),
+                            plot_fid)
+
+
+    # %% [markdown]
+    # ## Perform Sensitivity Analysis
+    # %%
+
     # Formulate the SALib problem
     problem = experimenter.formulate_salib_problem(parameters)
 
@@ -85,20 +103,25 @@ for project in projects:
         experimenter.generate_samples(parameters_to_select=parameters,
         N=2**config['sample_magnitude'])
         ).iter.nunique()
-    
     missing_iters = set(range(n_ideal)).difference(df.iter)
     if missing_iters:
         logger.warning(f"Missing {len(missing_iters)} iterations")
 
     # Perform the sensitivity analysis for groups
     problem['outputs'] = objectives
-
-    swplt.plot_objectives(df, 
-                            parameters_order, 
-                            objectives,
-                            pd.Series([False] * df.shape[0],
-                                      index = df.index),
-                            plot_fid)
+    rg = {objective: sobol.analyze(
+                problem, 
+                (
+                    df[objective]
+                    .iloc[0:
+                                    (2**(config['sample_magnitude'] + 1) *\
+                                      (len(set(problem['groups'])) + 1))]
+                    .fillna(df[objective].median())
+                    .values
+                ),
+                print_to_console=False
+            ) 
+            for objective in objectives}
 
     # Perform the sensitivity analysis for parameters
     problemi = problem.copy()
@@ -111,7 +134,13 @@ for project in projects:
                         ),
                         print_to_console=False) 
                         for objective in objectives}
-    
-    ris.append(ri)
 
-swplt.heatmaps(ris, plot_fid / f'heatmap_side.svg',problem,projects)
+    # Barplot of sensitvitiy indices
+    for r_, groups in zip([rg,ri],  ['groups','parameters']):
+        swplt.plot_sensitivity_indices(r_, 
+                                     objectives, 
+                                     plot_fid / f'{groups}_indices.png')
+
+    # Heatmap of sensitivity indices    
+    for r_, groups in zip([rg,ri],  ['groups','parameters']):
+        swplt.heatmaps(r_, plot_fid / f'heatmap_{groups}_indices.png',problem)

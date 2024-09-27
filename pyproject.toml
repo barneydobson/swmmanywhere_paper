@@ -5,9 +5,6 @@ requires = [
   "setuptools-scm",
 ]
 
-[tool.setuptools.packages.find]
-exclude = ["htmlcov"] # Exclude the coverage report file from setuptools package finder
-
 [project]
 name = "swmmanywhere_paper"
 version = "0.0.1"
@@ -25,10 +22,8 @@ dependencies = [
   "matplotlib",
   "SALib",
   "seaborn",
-  "pymc",
   "scikit-learn",
-  "paretoset",
-  "swmmanywhere@ git+https://github.com/ImperialCollegeLondon/SWMManywhere.git",
+  "swmmanywhere",
 ]
 [project.optional-dependencies]
 dev = [
