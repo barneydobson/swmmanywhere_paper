@@ -51,7 +51,7 @@ to parallelise as a PBS jobarray - with an example submit file in `submit_icl_ex
 
 The results of the experiments used in the paper are contained in `tests\test_data` in this repository.
 Only those required to create the plots are retained to avoid overwhelming the storage on this repository.
-All figures can be reproduced by running `tests/test_figs.py` locally:
+All figures can be reproduced in the `tests/test_data/plots` directory by running `tests/test_figs.py` locally:
 
 ```bash
 python tests/test_figs.py
