@@ -49,13 +49,13 @@ for project in projects:
     df = df.sort_values(by = 'iter')
     
     # Clip anoms
-    for obj in ['outlet_kge_flooding', 'outlet_nse_flooding', 'outlet_nse_flow', 'outlet_kge_flow']:
+    for obj in ['outfall_kge_flooding', 'outfall_nse_flooding', 'outfall_nse_flow', 'outfall_kge_flow']:
         df.loc[df[obj] < -5, obj] = -5
 
 
     # Format order
     objectives = df.columns.intersection(metrics.keys())
-    obj_grps = ['flow','flooding','outlet']
+    obj_grps = ['flow','flooding','outfall']
     objectives = pd.Series(objectives.rename('objective')).reset_index()
     objectives['group'] = 'graph'
     for ix, obj in objectives.iterrows():

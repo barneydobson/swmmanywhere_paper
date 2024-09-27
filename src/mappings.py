@@ -1,25 +1,25 @@
 metric_mapping = {
-"outlet_relerror_length": "mRL",
-"outlet_relerror_npipes": "mRP",
-"outlet_relerror_nmanholes": "mRM",
+"outfall_relerror_length": "mRL",
+"outfall_relerror_npipes": "mRP",
+"outfall_relerror_nmanholes": "mRM",
 "nc_deltacon0": "mD0",
 "nc_laplacian_dist": "mLD",
-"nc_vertex_edge_distance": "mD",
+"nc_vertex_edge_distance": "mVD",
 "kstest_edge_betweenness": "mKE",
 "kstest_betweenness": "mKN",
-"outlet_relerror_diameter": "mRD",
-"outlet_kstest_diameters": "mKD",
-"outlet_nse_flow" : "mNQ",
-"outlet_kge_flow": "mKQ",
-"outlet_relerror_flow": "mRQ",
-"outlet_nse_flooding": "mNF",
-"outlet_kge_flooding": "mKF",
-"outlet_relerror_flooding": "mRF"
+"outfall_relerror_diameter": "mRD",
+"outfall_kstest_diameters": "mKD",
+"outfall_nse_flow" : "mNQ",
+"outfall_kge_flow": "mKQ",
+"outfall_relerror_flow": "mRQ",
+"outfall_nse_flooding": "mNF",
+"outfall_kge_flooding": "mKF",
+"outfall_relerror_flooding": "mRF"
 }
 
 param_mapping = {
 "node_merge_distance" : "pNM",
-"outlet_length" : "pOL",
+"outfall_length" : "pOL",
 "max_street_length" : "pXS",
 "river_buffer_distance" : "pRB",
 "chahinian_slope_scaling" : "pSS",

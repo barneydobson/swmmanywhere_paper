@@ -65,12 +65,12 @@ for project in projects:
 
 df = pd.concat(dfp)
 df = df.reset_index(drop=True)
-for obj in ['outlet_kge_flooding', 'outlet_nse_flooding', 'outlet_nse_flow', 'outlet_kge_flow']:
+for obj in ['outfall_kge_flooding', 'outfall_nse_flooding', 'outfall_nse_flow', 'outfall_kge_flow']:
     df.loc[df[obj] < -5, obj] = -5
 
 
 objectives = df.columns.intersection(metrics.keys())
-obj_grps = ['flow','flooding','outlet']
+obj_grps = ['flow','flooding','outfall']
 objectives = pd.Series(objectives.rename('objective')).reset_index()
 objectives['group'] = 'graph'
 for ix, obj in objectives.iterrows():
@@ -93,18 +93,18 @@ n_cols = 4
 n_rows = 5
 
 par_mapping = {
-    0: ["node_merge_distance", "outlet_length", "max_street_length", "river_buffer_distance"],
+    0: ["node_merge_distance", "outfall_length", "max_street_length", "river_buffer_distance"],
     1: ["chahinian_slope_scaling","chahinian_angle_scaling","length_scaling", "contributing_area_scaling"],
     2: ["chahinian_slope_exponent","chahinian_angle_exponent", "length_exponent", "contributing_area_exponent"],
     3: ["max_fr","min_v","max_v", "min_depth"],
     4: ["max_depth","precipitation",None, None],
 }
 
-# Perform bootstrapping (for 'outlet_nse_flow')
+# Perform bootstrapping (for 'outfall_nse_flow')
 if False:
     n_bootstraps = 50
     frac = 0.1
-    objective = 'outlet_nse_flow'
+    objective = 'outfall_nse_flow'
     bootstrap_results = {p : [] for p in parameters}
     for n in tqdm(range(n_bootstraps)):
         ix = df.sample(frac=frac, replace=True).index
@@ -128,10 +128,10 @@ if False:
 # By objective - all projects
 fig, axs = plt.subplots(n_rows, n_cols, figsize=(10, 10))
 hl = {}
-for objective in ['outlet_nse_flow', 
-                  'outlet_kge_flow', 
-                  'outlet_relerror_flow',
-                  'outlet_relerror_diameter']:
+for objective in ['outfall_nse_flow', 
+                  'outfall_kge_flow', 
+                  'outfall_relerror_flow',
+                  'outfall_relerror_diameter']:
     if 'nse' in objective:
         weights = df[objective].clip(lower=0)
     elif 'kge' in objective:
@@ -167,10 +167,10 @@ for project in projects:
     cols = {'flooding' : 'b',
             'flow' : 'r',
             'graph' : 'k',
-            'outlet' : 'g'}
+            'outfall' : 'g'}
     for objective, grp in objectives.set_index('objective').group.items():
         col = cols[grp]
-        if objective == 'outlet_relerror_diameter':
+        if objective == 'outfall_relerror_diameter':
             ls = '-.'
             lab = 'Diameter (RE)'
         #elif 'relerror' in objective and ('flow' in objective or 'flooding' in objective):
@@ -181,7 +181,7 @@ for project in projects:
         #        lab = 'Flooding (RE)'
         else:
             ls = '-'
-            if grp == 'outlet':
+            if grp == 'outfall':
                 lab = 'Design metric (RE/KS)'
             elif grp == 'flow':
                 lab = 'Flow (NSE/KGE/RE)'
@@ -230,11 +230,11 @@ for project in projects:
     fig.tight_layout()
     fig.savefig(plot_fid / f'parameter_distributions_byobjective_{project}.png')
 
-# By project - outlet_nse_flow
+# By project - outfall_nse_flow
 fig, axs = plt.subplots(n_rows, n_cols, figsize=(10, 10))
 hl = {}
 
-objective = 'outlet_nse_flow'
+objective = 'outfall_nse_flow'
 colls = {'cranbrook_node_1439.1' : {'col' : 'k', 'ls' : '-', 'lw' : 1},
  'bellinge_G62F060_G61F180_l1' : {'col' : 'r', 'ls' : '-.', 'lw' : 0.5},
  'bellinge_G72F550_G72F010_l1' : {'col' : 'r', 'ls' : '-', 'lw' : 0.5},
@@ -246,7 +246,7 @@ colls = {'cranbrook_node_1439.1' : {'col' : 'k', 'ls' : '-', 'lw' : 1},
 }
 for project in projects:
     df_ = df.loc[df.project == project]
-    if objective == 'outlet_relerror_diameter':
+    if objective == 'outfall_relerror_diameter':
         lab = 'Diameter (RE)'
     #elif 'relerror' in objective and ('flow' in objective or 'flooding' in objective):
     #    ls = '-.'
@@ -255,7 +255,7 @@ for project in projects:
     #    else:
     #        lab = 'Flooding (RE)'
     else:
-        if grp == 'outlet':
+        if grp == 'outfall':
             lab = 'Design metric (RE/KS)'
         elif grp == 'flow':
             lab = 'Flow (NSE/KGE/RE)'

@@ -4,7 +4,7 @@ import networkx as nx
 
 def calc_flowtimes(G: nx.MultiDiGraph, 
                    df: pd.DataFrame,
-                   outlet: Hashable,
+                   outfall: Hashable,
                    cutoff = pd.to_datetime('2000-01-01 03:00:00')):
     """
     Calculate the flow times for a network.
@@ -12,7 +12,7 @@ def calc_flowtimes(G: nx.MultiDiGraph,
     Args:
         G (nx.MultiDiGraph): The input graph.
         df (pd.DataFrame): The input DataFrame.
-        outlet (Hashable): The outlet node.
+        outfall (Hashable): The outfall node.
         cutoff (pd.Timestamp): The cutoff date. Defaults to '2000-01-01 03:00:00'.
     """
     df = df[df['date'] < cutoff]
@@ -26,7 +26,7 @@ def calc_flowtimes(G: nx.MultiDiGraph,
                             for u,v,k,d in G.edges(data=True,keys=True)},
                            'travel_time')
     paths = nx.shortest_path(G,
-                             target = outlet,
+                             target = outfall,
                              weight = 'travel_time')
     times = {n : 0 for n in G.nodes}
     for node, path in paths.items():
