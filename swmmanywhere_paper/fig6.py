@@ -5,9 +5,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from SALib.analyze import sobol
 from swmmanywhere.filepaths import check_bboxes
-from swmmanywhere.logging import logger
 from swmmanywhere.metric_utilities import metrics
 from swmmanywhere.swmmanywhere import load_config
 from tqdm import tqdm
