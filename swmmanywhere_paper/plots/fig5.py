@@ -1,8 +1,4 @@
 """Perform sensitivity analysis on the results of the model runs."""
-"""Plotting SWMManywhere.
-
-A module with some built in plotting for SWMManywhere.
-"""
 from __future__ import annotations
 
 from pathlib import Path
@@ -26,7 +22,7 @@ from swmmanywhere_paper.mappings import metric_mapping, param_mapping
 # %%
 # Load the configuration file and extract relevant data
 
-def plot_fig5():
+def plot_fig5(base_dir):
     projects = [ "cranbrook_node_1439.1",
                 "bellinge_G60F61Y_G60F390_l1",
                 "bellinge_G72F800_G72F050_l1"
@@ -34,7 +30,7 @@ def plot_fig5():
     ris = []
     for project in projects:
 
-        base_dir = Path.home() / "Documents" / "data" / "swmmanywhere" / 'notrim_experiment'
+        
         config_path = base_dir / project / 'config.yml'
         config = load_config(config_path, validation = False)
         config['base_dir'] = base_dir / project
@@ -60,13 +56,13 @@ def plot_fig5():
         df = df.sort_values(by = 'iter')
 
         # Clip anoms
-        for obj in ['outlet_kge_flooding', 'outlet_nse_flooding', 'outlet_nse_flow', 'outlet_kge_flow']:
+        for obj in ['outfall_kge_flooding', 'outfall_nse_flooding', 'outfall_nse_flow', 'outfall_kge_flow']:
             df.loc[df[obj] < -5, obj] = -5
 
 
         # Format order
         objectives = df.columns.intersection(metrics.keys())
-        obj_grps = ['flow','flooding','outlet']
+        obj_grps = ['flow','flooding','outfall']
         objectives = pd.Series(objectives.rename('objective')).reset_index()
         objectives['group'] = 'graph'
         for ix, obj in objectives.iterrows():
@@ -168,7 +164,7 @@ def heatmaps(rs: list[dict[str, pd.DataFrame]],
             interactions = interactions[df.parameter]
             firsts = firsts[df.parameter]
         
-        obj_grps = ['flow','flooding','outlet']
+        obj_grps = ['flow','flooding','outfall']
         objectives = totals.reset_index()[['objective']]
         objectives['group'] = 'graph'
         for ix, obj in objectives.iterrows():
