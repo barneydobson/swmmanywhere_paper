@@ -1,0 +1,93 @@
+base_dir: /rds/general/user/bdobson/ephemeral/swmmanywhere
+project: bellinge_G62F060_G61F180_l1
+bbox:
+- 10.337445417727931
+- 55.34997073499983
+- 10.349436807375328
+- 55.360836086663824
+api_keys: C:\Users\bdobson\Documents\data\swmmanywhere\cranbrook\api_keys.yml
+run_settings:
+  reporting_iters: 30
+  duration: 86400
+  storevars:
+  - flooding
+  - flow
+real:
+  results: /rds/general/user/bdobson/ephemeral/swmmanywhere/bellinge_G62F060_G61F180_l1/real/real_results.parquet
+  inp: null
+  graph: /rds/general/user/bdobson/ephemeral/swmmanywhere/bellinge_G62F060_G61F180_l1/real/graph.json
+  subcatchments: /rds/general/user/bdobson/ephemeral/swmmanywhere/bellinge_G62F060_G61F180_l1/real/subcatchments.geojson
+address_overrides:
+  precipitation: /rds/general/user/bdobson/home/swmmanywhere_paper/tests/test_data/storm.dat
+  real_subcatchments: /rds/general/user/bdobson/ephemeral/swmmanywhere/bellinge_G62F060_G61F180_l1/real/subcatchments.geojson
+parameter_overrides:
+  outfall_derivation:
+    method: withtopo
+graphfcn_list:
+- assign_id
+- fix_geometries
+- remove_non_pipe_allowable_links
+- calculate_streetcover
+- remove_parallel_edges
+- to_undirected
+- split_long_edges
+- merge_street_nodes
+- assign_id
+- clip_to_catchments
+- calculate_contributing_area
+- set_elevation
+- double_directed
+- fix_geometries
+- set_surface_slope
+- set_chahinian_slope
+- set_chahinian_angle
+- calculate_weights
+- identify_outfalls
+- derive_topology
+- pipe_by_pipe
+- fix_geometries
+- assign_id
+metric_list:
+- outfall_nse_flow
+- outfall_kge_flow
+- outfall_relerror_flow
+- outfall_relerror_length
+- outfall_relerror_npipes
+- outfall_relerror_nmanholes
+- outfall_relerror_diameter
+- outfall_nse_flooding
+- outfall_kge_flooding
+- outfall_relerror_flooding
+- grid_nse_flooding
+- grid_kge_flooding
+- grid_relerror_flooding
+- subcatchment_nse_flooding
+- subcatchment_kge_flooding
+- subcatchment_relerror_flooding
+- bias_flood_depth
+- kstest_edge_betweenness
+- kstest_betweenness
+- outfall_kstest_diameters
+- nc_deltacon0
+- nc_laplacian_dist
+- nc_vertex_edge_distance
+parameters_to_sample:
+- min_v
+- max_v
+- max_fr
+- precipitation
+- outfall_length
+- chahinian_angle_scaling
+- chahinian_slope_scaling
+- length_scaling
+- contributing_area_scaling
+- chahinian_angle_exponent
+- chahinian_slope_exponent
+- length_exponent
+- contributing_area_exponent
+- max_depth
+- max_street_length
+- node_merge_distance
+- river_buffer_distance
+- min_depth
+sample_magnitude: 10
