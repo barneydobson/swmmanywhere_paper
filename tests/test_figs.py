@@ -4,6 +4,7 @@ from pathlib import Path
 from swmmanywhere_paper.plots import (
     fig4,
     fig5,
+    fig6,
     fig78
 )
 
@@ -14,6 +15,9 @@ def test_fig4():
 
 def test_fig5():
     fig5.plot_fig5(Path(r'C:\Users\darne\Documents\data\swmmanywhere_paper_data'))
+
+def test_fig6():
+    fig6.plot_fig6(Path(r'C:\Users\darne\Documents\data\swmmanywhere_paper_data'))
 
 def test_fig78():
     fig78.plot_fig78(Path(r'C:\Users\darne\Documents\data\swmmanywhere_paper_data'))
