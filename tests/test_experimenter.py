@@ -8,7 +8,6 @@ from unittest import mock
 import numpy as np
 import pytest
 import yaml
-
 from swmmanywhere import parameters, swmmanywhere
 from swmmanywhere.paper import experimenter
 

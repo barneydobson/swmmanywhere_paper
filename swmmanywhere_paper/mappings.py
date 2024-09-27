@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 metric_mapping = {
 "outfall_relerror_length": "mRL",
 "outfall_relerror_npipes": "mRP",

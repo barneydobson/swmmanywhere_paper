@@ -6,7 +6,7 @@ requires = [
 ]
 
 [project]
-name = "swmmanywhere_paper"
+name = "swmmanywhere-paper"
 version = "0.0.1"
 authors = [
     { name = "Barnaby Dobson", email = "b.dobson@imperial.ac.uk" },
@@ -21,8 +21,8 @@ classifiers = [
 dependencies = [
   "matplotlib",
   "SALib",
-  "seaborn",
   "scikit-learn",
+  "seaborn",
   "swmmanywhere",
 ]
 [project.optional-dependencies]
@@ -37,21 +37,6 @@ dev = [
   "ruff",
 ]
 
-[tool.mypy]
-disallow_any_explicit = false
-disallow_any_generics = false
-warn_unreachable = true
-warn_unused_ignores = false
-disallow_untyped_defs = false
-exclude = [".venv/"]
-
-[[tool.mypy.overrides]]
-module = "tests.*"
-disallow_untyped_defs = false
-
-[tool.pytest.ini_options]
-addopts = "-v -p no:warnings --doctest-modules"
-
 [tool.ruff]
 select = ["D", "E", "F", "I"] # pydocstyle, pycodestyle, Pyflakes, isort
 
@@ -65,6 +50,21 @@ convention = "google"
 required-imports = ["from __future__ import annotations"]
 
 [tool.codespell]
+
+[tool.pytest.ini_options]
+addopts = "-v -p no:warnings --doctest-modules"
+
+[tool.mypy]
+disallow_any_explicit = false
+disallow_any_generics = false
+warn_unreachable = true
+warn_unused_ignores = false
+disallow_untyped_defs = false
+exclude = [".venv/"]
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
 
 [tool.refurb]
 ignore = [

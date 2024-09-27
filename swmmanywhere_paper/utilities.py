@@ -1,13 +1,16 @@
+from __future__ import annotations
+
 from typing import Hashable
+
+import networkx as nx
 import pandas as pd
-import networkx as nx 
+
 
 def calc_flowtimes(G: nx.MultiDiGraph, 
                    df: pd.DataFrame,
                    outfall: Hashable,
                    cutoff = pd.to_datetime('2000-01-01 03:00:00')):
-    """
-    Calculate the flow times for a network.
+    """Calculate the flow times for a network.
 
     Args:
         G (nx.MultiDiGraph): The input graph.

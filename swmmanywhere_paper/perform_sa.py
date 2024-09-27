@@ -6,14 +6,15 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from SALib.analyze import sobol
+from swmmanywhere.filepaths import check_bboxes
+from swmmanywhere.logging import logger
+from swmmanywhere.metric_utilities import metrics
+from swmmanywhere.swmmanywhere import load_config
 from tqdm import tqdm
 
-from swmmanywhere.logging import logger
 from swmmanywhere_paper import experimenter
 from swmmanywhere_paper import plotting as swplt
-from swmmanywhere.filepaths import check_bboxes
-from swmmanywhere.swmmanywhere import load_config
-from swmmanywhere.metric_utilities import metrics
+
 # %% [markdown]
 # ## Initialise directories and load results
 # %%
@@ -25,7 +26,7 @@ projects = [ "cranbrook_node_1439.1",
 for project in projects:
 
     base_dir = Path.home() / "Documents" / "data" / "swmmanywhere" / 'notrim_experiment'
-    config_path = base_dir / project / f'config.yml'
+    config_path = base_dir / project / 'config.yml'
     config = load_config(config_path, validation = False)
     config['base_dir'] = base_dir / project
     parameters = config['parameters_to_sample']
