@@ -50,6 +50,7 @@ convention = "google"
 required-imports = ["from __future__ import annotations"]
 
 [tool.codespell]
+skip = "swmmanywhere_paper/mappings.py,*.parquet"
 
 [tool.pytest.ini_options]
 addopts = "-v -p no:warnings --doctest-modules"
