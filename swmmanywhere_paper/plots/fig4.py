@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import tempfile
+import yaml
 from pathlib import Path
 
 import geopandas as gpd
@@ -18,6 +20,7 @@ from swmmanywhere_paper import utilities
 address_path = Path()
 real_dir = Path()
 if __name__ == '__main__':
+
     plot_fig4(address_path, real_dir)
 
 def plot_fig4(address_path: Path, real_dir: Path):
@@ -41,8 +44,12 @@ class ResultsPlotter():
             address_path (Path): The path to the address yaml file.
             real_dir (Path): The path to the directory containing the real data.
         """
-        # Load the addresses
-        self.addresses = filepaths_from_yaml(address_path)
+        # Load the 
+        with tempfile.TemporaryDirectory() as tempdir:
+            addresses = yaml.safe_load(address_path.read_text())
+            addresses["base_dir"] = str(address_path.parent.parent.parent.parent)
+            yaml.dump(addresses, (Path(tempdir) / 'addresses.yml').open("w"))
+            self.addresses = filepaths_from_yaml(Path(tempdir) / 'addresses.yml')
         self.config = load_config(self.addresses.project_paths.project / 'config.yml',
                                   validation=False)
         # Create the plot directory
@@ -54,7 +61,7 @@ class ResultsPlotter():
             self.addresses.model_paths.model / 'results.parquet')
         self._synthetic_results.id = self._synthetic_results.id.astype(str)
 
-        self._real_results = pd.read_parquet(real_dir / 'real_results.parquet')
+        self._real_results = pd.read_parquet(real_dir / 'real_results_ups_ds.parquet')
         self._real_results.id = self._real_results.id.astype(str)
 
         # Load the synthetic and real graphs
@@ -62,14 +69,14 @@ class ResultsPlotter():
         self._synthetic_G = nx.relabel_nodes(self._synthetic_G,
                          {x : str(x) for x in self._synthetic_G.nodes})
         nx.set_node_attributes(self._synthetic_G,
-            {u : str(d.get('outlet',None)) for u,d 
+            {u : str(d.get('outfall',None)) for u,d 
              in self._synthetic_G.nodes(data=True)},
-            'outlet')
+            'outfall')
 
         self._real_G = load_graph(real_dir / 'graph.json')
         self._real_G = nx.relabel_nodes(self._real_G,
                         {x : str(x) for x in self._real_G.nodes})
-        
+
         # Calculate the slope
         calculate_slope(self._synthetic_G)
         calculate_slope(self._real_G)
@@ -78,19 +85,19 @@ class ResultsPlotter():
         self._synthetic_subcatchments = gpd.read_file(self.addresses.model_paths.subcatchments)
         self._real_subcatchments = gpd.read_file(real_dir / 'subcatchments.geojson')
 
-        # Calculate outlets
-        self.sg_syn, self.syn_outlet = metric_utilities.best_outlet_match(self.synthetic_G, 
+        # Calculate outfalls
+        self.sg_syn, self.syn_outfall = metric_utilities.best_outfall_match(self.synthetic_G, 
                                                                 self.real_subcatchments)
-        self.sg_real, self.real_outlet = metric_utilities.dominant_outlet(self.real_G, 
+        self.sg_real, self.real_outfall = metric_utilities.dominant_outfall(self.real_G, 
                                                                 self.real_results)
         
         # Calculate travel times
         self._real_G = utilities.calc_flowtimes(self.real_G, 
                                  self.real_results,
-                                 self.real_outlet)
+                                 self.real_outfall)
         self._synthetic_G = utilities.calc_flowtimes(self.synthetic_G,
                                  self.synthetic_results,
-                                 self.syn_outlet)
+                                 self.syn_outfall)
 
     def __getattr__(self, name):
         """Because these are large datasets, return a copy."""
@@ -103,8 +110,8 @@ class ResultsPlotter():
     def make_all_plots(self):
         """make_all_plots."""
         f,axs = plt.subplots(2,3,figsize = (10,7.5))
-        self.outlet_plot('flow', ax_ = axs[0,0])
-        self.outlet_plot('flooding', ax_ = axs[0,1])
+        self.outfall_plot('flow', ax_ = axs[0,0])
+        self.outfall_plot('flooding', ax_ = axs[0,1])
         self.design_distribution(value='travel_time', ax_ = axs[0,2])
         self.shape_relerror_plot('grid')
         self.shape_relerror_plot('subcatchment')
@@ -146,12 +153,12 @@ class ResultsPlotter():
                          self.plotdir / 'real_graph_edges.geojson',
                          real_G.graph['crs'])
 
-    def outlet_plot(self, 
+    def outfall_plot(self, 
                     var: str = 'flow',
                     fid: Path | None = None,
                     ax_ = None,
                     cutoff = pd.to_datetime('2000-01-01 03:00:00')):
-        """Plot flow/flooding at outlet.
+        """Plot flow/flooding at outfall.
 
         If an ax is provided, plot on that ax, otherwise create a new figure and
         save it to the provided fid (or plot directory if not provided).
@@ -163,13 +170,13 @@ class ResultsPlotter():
             ax_ ([type], optional): The axes to plot on. Defaults to None.
         """            
         if var == 'flow':
-            # Identify synthetic and real arcs that flow into the best outlet node
+            # Identify synthetic and real arcs that flow into the best outfall node
             syn_arc = [d['id'] for u,v,d in self.synthetic_G.edges(data=True)
-                        if v == self.syn_outlet]
+                        if v == self.syn_outfall]
             real_arc = [d['id'] for u,v,d in self.real_G.edges(data=True)
-                    if v == self.real_outlet]
+                    if v == self.real_outfall]
         elif var == 'flooding':
-            # Use all nodes in the outlet match subgraphs
+            # Use all nodes in the outfall match subgraphs
             syn_arc = list(self.sg_syn.nodes)
             real_arc = list(self.sg_real.nodes)
         df = metric_utilities.align_by_id(self.synthetic_results,
@@ -194,7 +201,7 @@ class ResultsPlotter():
             unit = 'l'
         ax.set_ylabel(f'{var.title()} ({unit})')
         if not ax_:
-            f.savefig(self.plotdir / f'outlet-{var}.png')
+            f.savefig(self.plotdir / f'outfall-{var}.png')
 
     def shape_relerror_plot(self, shape: str = 'grid'):
         """shape_relerror_plot.
