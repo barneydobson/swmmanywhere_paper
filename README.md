@@ -41,7 +41,7 @@ of samples to be evaluated is equal to:
 This new `config` file should be passed to the `experimenter`. For example,
 
 ```bash
-python experimenter.py --config_path=/path/to/config
+python experimenter.py --config_path=/path/to/config.yml
 ```
 
 You are likely to need to run such an experiment on HPC. The `experimenter` is set up
