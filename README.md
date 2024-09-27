@@ -54,5 +54,5 @@ Only those required to create the plots are retained to avoid overwhelming the s
 All figures can be reproduced by running `tests\test_figs.py` locally:
 
 ```bash
-pytest tests\test_figs.py
+pytest tests/test_figs.py
 ```
