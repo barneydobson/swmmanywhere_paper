@@ -25,10 +25,8 @@ dependencies = [
   "matplotlib",
   "SALib",
   "seaborn",
-  "pymc",
   "scikit-learn",
-  "paretoset",
-  "swmmanywhere@ git+https://github.com/ImperialCollegeLondon/SWMManywhere.git",
+  "swmmanywhere",
 ]
 [project.optional-dependencies]
 dev = [
