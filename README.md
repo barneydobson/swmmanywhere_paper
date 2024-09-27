@@ -45,7 +45,7 @@ python experimenter.py --config_path=/path/to/config.yml
 ```
 
 You are likely to need to run such an experiment on HPC. The `experimenter` is set up
-to parallelise as a PBS jobarray - with an example in `submit_icl_example`.
+to parallelise as a PBS jobarray - with an example submit file in `submit_icl_example`.
 
 ## Recreating plots
 
