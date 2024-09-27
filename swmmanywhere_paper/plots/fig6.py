@@ -23,8 +23,8 @@ def plot_fig6(base_dir):
     # Load the configuration file and extract relevant data
     projects = [
         "cranbrook_node_1439.1",
-        "bellinge_G60F61Y_G60F390_l1",
-        "bellinge_G72F800_G72F050_l1",
+        # "bellinge_G60F61Y_G60F390_l1",
+        # "bellinge_G72F800_G72F050_l1",
     ]
     for project in projects:
         config_path = base_dir / project / "config.yml"
@@ -76,7 +76,7 @@ def plot_fig6(base_dir):
         ).parameter
 
         # Make a directory to store plots in
-        plot_fid = results_dir.parent / "plots"
+        plot_fid = base_dir / "plots"
         plot_fid.mkdir(exist_ok=True, parents=True)
 
         # %% [markdown]

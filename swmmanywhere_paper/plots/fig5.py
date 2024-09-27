@@ -39,11 +39,15 @@ def plot_fig5(base_dir):
             "bellinge_G73F000_G72F120_l1",
         ],
     ]
-    for projects_ in projects:
-        make_heatmap_subplots(base_dir, projects_)
+    fids = ["fig5.svg", "fig_sup.svg"]
+    plot_dir = base_dir / "plots"
+    plot_dir.mkdir(exist_ok=True, parents=True)
+    for projects_, fid_ in zip(projects, fids):
+        fid = plot_dir / fid_
+        make_heatmap_subplots(base_dir, projects_, fid)
 
 
-def make_heatmap_subplots(base_dir, projects):
+def make_heatmap_subplots(base_dir, projects, plot_fid):
     """Create heatmap of sensitivity indices."""
     ris = []
     for project in projects:
@@ -96,10 +100,6 @@ def make_heatmap_subplots(base_dir, projects):
             by=["group", "parameter"]
         ).parameter
 
-        # Make a directory to store plots in
-        plot_fid = results_dir.parent / "plots"
-        plot_fid.mkdir(exist_ok=True, parents=True)
-
         # Formulate the SALib problem
         problem = experimenter.formulate_salib_problem(parameters)
 
@@ -131,7 +131,7 @@ def make_heatmap_subplots(base_dir, projects):
 
         ris.append(ri)
 
-    heatmaps(ris, plot_fid / "heatmap_side.svg", problem, projects)
+    heatmaps(ris, plot_fid, problem, projects)
 
 
 def heatmaps(
@@ -142,7 +142,7 @@ def heatmaps(
     Args:
         rs (list[dict[str, pd.DataFrame]]): A list of dictionaries containing
             the sensitivity indices as produced by SALib.analyze.
-        plot_fid (Path): The directory to save the plots to.
+        plot_fid (Path): The file to save the plots to.
         problem (dict): The problem formulation.
         sups (list[str]): The titles for the subplots.
     """
