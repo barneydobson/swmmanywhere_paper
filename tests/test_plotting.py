@@ -4,7 +4,6 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import pandas as pd
-
 from swmmanywhere.paper import plotting
 
 

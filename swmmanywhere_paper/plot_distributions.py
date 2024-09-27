@@ -3,18 +3,19 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib import pyplot as plt
 from scipy import stats
 from scipy.integrate import cumulative_trapezoid as cumtrapz
 from sklearn.preprocessing import MinMaxScaler
+from swmmanywhere.filepaths import check_bboxes
+from swmmanywhere.metric_utilities import metrics
+from swmmanywhere.swmmanywhere import load_config
 from tqdm import tqdm
 
-from swmmanywhere.filepaths import check_bboxes
-from swmmanywhere.swmmanywhere import load_config
-from swmmanywhere.metric_utilities import metrics
 from swmmanywhere_paper.mappings import metric_mapping, param_mapping
+
 # %% [markdown]
 # ## Initialise directories and load results
 # %%
@@ -35,7 +36,7 @@ dfp = []
 for project in projects:
 
     base_dir = Path.home() / "Documents" / "data" / "swmmanywhere" / "notrim_experiment"
-    config_path = base_dir / project / f'config.yml'
+    config_path = base_dir / project / 'config.yml'
     config = load_config(config_path, validation = False)
     config['base_dir'] = base_dir / project
     objectives = config['metric_list']

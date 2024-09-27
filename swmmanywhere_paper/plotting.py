@@ -14,15 +14,16 @@ import pandas as pd
 import seaborn as sns
 from SALib.plotting.bar import plot as barplot
 from scipy import stats
-
 from swmmanywhere import metric_utilities
+from swmmanywhere.filepaths import filepaths_from_yaml
 from swmmanywhere.geospatial_utilities import graph_to_geojson
 from swmmanywhere.graph_utilities import load_graph
 from swmmanywhere.parameters import MetricEvaluation
-from swmmanywhere.filepaths import filepaths_from_yaml
 from swmmanywhere.swmmanywhere import load_config
+
 from swmmanywhere_paper import utilities
 from swmmanywhere_paper.mappings import metric_mapping, param_mapping
+
 
 class ResultsPlotter():
     """Plotter object."""
@@ -542,7 +543,7 @@ def plot_distributions(df: pd.DataFrame,
         ax.grid(True)
     
     fig.tight_layout()
-    fig.savefig(plot_fid / f"parameter_distributions.png", dpi=500)
+    fig.savefig(plot_fid / "parameter_distributions.png", dpi=500)
     if sf:
         plt.close(fig)
     

@@ -1,0 +1,7 @@
+from pathlib import Path
+from swmmanywhere_paper.plots import fig4
+
+def test_fig4():
+    address_path = Path(r'C:\Users\darne\Documents\data\swmmanywhere_paper_data\cranbrook_node_1439.1\bbox_1\model_12651\addresses.yml')
+    real_dir = Path(r'C:\Users\darne\Documents\data\swmmanywhere_paper_data\cranbrook_node_1439.1\real')
+    fig4.plot_fig4(address_path,real_dir)

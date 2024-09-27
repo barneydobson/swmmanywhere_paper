@@ -3,12 +3,12 @@ from __future__ import annotations
 
 import json
 import os
-import sys
 from copy import deepcopy
 from pathlib import Path
 
-from swmmanywhere_paper.subselect import subselect_cut
 from swmmanywhere import swmmanywhere
+
+from swmmanywhere_paper.subselect import subselect_cut
 
 os.environ['SWMMANYWHERE_VERBOSE'] = "true"
 base_project = 'cranbrook'
