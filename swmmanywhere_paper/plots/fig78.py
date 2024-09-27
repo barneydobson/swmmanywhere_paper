@@ -43,6 +43,7 @@ def plot_fig78(base_dir):
         # Load the results
         bbox = check_bboxes(config["bbox"], config["base_dir"])
         results_dir = config["base_dir"] / f"bbox_{bbox}" / "results"
+        results_dir.make_dir(exist_ok=True, parents=True)
         fids = list(results_dir.glob("*_metrics.csv"))
         dfs = [pd.read_csv(fid) for fid in tqdm(fids, total=len(fids))]
 
@@ -80,6 +81,7 @@ def plot_fig78(base_dir):
     objectives = objectives.sort_values(by=["group", "objective"])
 
     plot_fid = results_dir.parent / "plots"
+    plot_fid.mkdir(exist_ok=True)
 
     n_panels = len(parameters)
     n_cols = int(n_panels**0.5)

@@ -62,6 +62,7 @@ class ResultsPlotter:
         self._synthetic_results.id = self._synthetic_results.id.astype(str)
 
         self._real_results = pd.read_parquet(real_dir / "real_results_ups_ds.parquet")
+        self._real_results["value"] = self._real_results["value"].astype(float)
         self._real_results.id = self._real_results.id.astype(str)
 
         # Load the synthetic and real graphs
