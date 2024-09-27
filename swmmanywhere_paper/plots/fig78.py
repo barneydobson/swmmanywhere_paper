@@ -12,7 +12,7 @@ from swmmanywhere.metric_utilities import metrics
 from swmmanywhere.swmmanywhere import load_config
 from tqdm import tqdm
 
-from swmmanywhere_paper.mappings import metric_mapping, param_mapping
+from swmmanywhere_paper.mappings import param_mapping
 
 
 def plot_fig78(base_dir):
@@ -80,7 +80,7 @@ def plot_fig78(base_dir):
                 break
     objectives = objectives.sort_values(by=["group", "objective"])
 
-    plot_fid = results_dir.parent / "plots"
+    plot_fid = base_dir / "plots"
     plot_fid.mkdir(exist_ok=True)
 
     n_panels = len(parameters)
@@ -116,113 +116,75 @@ def plot_fig78(base_dir):
         4: ["max_depth", "precipitation", None, None],
     }
 
-    # By objective - all projects
+    # By objective - one projects
+    project = "cranbrook_node_1439.1"
     fig, axs = plt.subplots(n_rows, n_cols, figsize=(10, 10))
     hl = {}
-    for objective in [
-        "outfall_nse_flow",
-        "outfall_kge_flow",
-        "outfall_relerror_flow",
-        "outfall_relerror_diameter",
-    ]:
+    cols = {"flooding": "b", "flow": "r", "graph": "k", "outfall": "g"}
+    for objective, grp in objectives.set_index("objective").group.items():
+        col = cols[grp]
+        if objective == "outfall_relerror_diameter":
+            ls = "-."
+            lab = "Diameter (RE)"
+        else:
+            ls = "-"
+            if grp == "outfall":
+                lab = "Design metric (RE/KS)"
+            elif grp == "flow":
+                lab = "Flow (NSE/KGE/RE)"
+            elif grp == "flooding":
+                lab = "Flooding (NSE/KGE/RE)"
+            else:
+                lab = "Graph metric (-)"
+        df_ = df.loc[df.project == project]
         if "nse" in objective:
-            weights = df[objective].clip(lower=0)
+            weights = df_[objective].clip(lower=0)
         elif "kge" in objective:
-            weights = df[objective].clip(lower=-0.41) + 0.41
+            weights = df_[objective].clip(lower=-0.41) + 0.41
         elif "relerror" in objective:
-            weights = df[objective].abs()
+            weights = 1 - df_[objective].abs().clip(upper=1.0)
+        else:
+            weights = pd.Series(
+                [x[0] for x in MinMaxScaler().fit_transform(-df_[[objective]])]
+            )
+
+        if weights.isna().all() or weights.var() == 0:
+            continue
+        weights = weights.fillna(0)
+
         for idx, objs in par_mapping.items():
             for ax, parameter in zip(axs[idx], objs):
                 if parameter is None:
                     ax.axis("off")
                     continue
-                kde = stats.gaussian_kde(df[parameter], weights=weights)
+                kde = stats.gaussian_kde(df_[parameter], weights=weights)
+                x = np.linspace(df_[parameter].min(), df_[parameter].max(), 100)
 
-                x = np.linspace(df[parameter].min(), df[parameter].max(), 100)
-                handle = ax.plot(x, kde(x), label=metric_mapping[objective])
-
+                # handle = ax.plot(x, kde(x),label=lab,color = col,ls=ls,alpha=0.7)
+                handle = ax.plot(
+                    x[1:],
+                    cumtrapz(kde(x), x),
+                    label=lab,
+                    color=col,
+                    ls=ls,
+                    alpha=0.7,
+                )
                 # ax.fill_between(x,
-                #                 bounds[parameter][0],
-                #                 bounds[parameter][1],
-                #                 color = 'gray',
-                #                 alpha = 0.1)
-                ax.set_title(param_mapping[parameter])
+                #              bounds[parameter][0],
+                #              bounds[parameter][1],
+                #              color = 'gray',
+                #              alpha = 0.1)
+                ax.set_xlabel(param_mapping[parameter])
                 ax.grid(True)
-                hl[objective] = handle
+                if ax is not axs[idx][0]:
+                    ax.set_yticklabels([])
+                else:
+                    ax.set_ylabel("CDF(x)")
+                hl[lab] = handle
 
     axs[-1, -1].legend(handles=[x[0] for x in hl.values()])
     fig.tight_layout()
-    fig.savefig(plot_fid / "parameter_distributions_byobjective.png")
-
-    # By objective - one projects
-    for project in projects:
-        fig, axs = plt.subplots(n_rows, n_cols, figsize=(10, 10))
-        hl = {}
-        cols = {"flooding": "b", "flow": "r", "graph": "k", "outfall": "g"}
-        for objective, grp in objectives.set_index("objective").group.items():
-            col = cols[grp]
-            if objective == "outfall_relerror_diameter":
-                ls = "-."
-                lab = "Diameter (RE)"
-            else:
-                ls = "-"
-                if grp == "outfall":
-                    lab = "Design metric (RE/KS)"
-                elif grp == "flow":
-                    lab = "Flow (NSE/KGE/RE)"
-                elif grp == "flooding":
-                    lab = "Flooding (NSE/KGE/RE)"
-                else:
-                    lab = "Graph metric (-)"
-            df_ = df.loc[df.project == project]
-            if "nse" in objective:
-                weights = df_[objective].clip(lower=0)
-            elif "kge" in objective:
-                weights = df_[objective].clip(lower=-0.41) + 0.41
-            elif "relerror" in objective:
-                weights = 1 - df_[objective].abs().clip(upper=1.0)
-            else:
-                weights = pd.Series(
-                    [x[0] for x in MinMaxScaler().fit_transform(-df_[[objective]])]
-                )
-
-            if weights.isna().all() or weights.var() == 0:
-                continue
-            weights = weights.fillna(0)
-
-            for idx, objs in par_mapping.items():
-                for ax, parameter in zip(axs[idx], objs):
-                    if parameter is None:
-                        ax.axis("off")
-                        continue
-                    kde = stats.gaussian_kde(df_[parameter], weights=weights)
-                    x = np.linspace(df_[parameter].min(), df_[parameter].max(), 100)
-
-                    # handle = ax.plot(x, kde(x),label=lab,color = col,ls=ls,alpha=0.7)
-                    handle = ax.plot(
-                        x[1:],
-                        cumtrapz(kde(x), x),
-                        label=lab,
-                        color=col,
-                        ls=ls,
-                        alpha=0.7,
-                    )
-                    # ax.fill_between(x,
-                    #              bounds[parameter][0],
-                    #              bounds[parameter][1],
-                    #              color = 'gray',
-                    #              alpha = 0.1)
-                    ax.set_xlabel(param_mapping[parameter])
-                    ax.grid(True)
-                    if ax is not axs[idx][0]:
-                        ax.set_yticklabels([])
-                    else:
-                        ax.set_ylabel("CDF(x)")
-                    hl[lab] = handle
-
-        axs[-1, -1].legend(handles=[x[0] for x in hl.values()])
-        fig.tight_layout()
-        fig.savefig(plot_fid / f"parameter_distributions_byobjective_{project}.png")
+    fig.savefig(plot_fid / "fig7.svg")
 
     # By project - outfall_nse_flow
     fig, axs = plt.subplots(n_rows, n_cols, figsize=(10, 10))
@@ -298,4 +260,4 @@ def plot_fig78(base_dir):
 
     axs[-1, -1].legend(handles=[x[0] for x in hl.values()])
     fig.tight_layout()
-    fig.savefig(plot_fid / f"parameter_distributions_byproject_{objective}.png")
+    fig.savefig(plot_fid / "fig8.svg")

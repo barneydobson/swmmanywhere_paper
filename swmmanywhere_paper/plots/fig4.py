@@ -52,7 +52,7 @@ class ResultsPlotter:
             self.addresses.project_paths.project / "config.yml", validation=False
         )
         # Create the plot directory
-        self.plotdir = self.addresses.model_paths.model / "plots"
+        self.plotdir = real_dir.parent.parent / "plots"
         self.plotdir.mkdir(exist_ok=True)
 
         # Load synthetic and real results
@@ -123,15 +123,15 @@ class ResultsPlotter:
         self.outfall_plot("flow", ax_=axs[0, 0])
         self.outfall_plot("flooding", ax_=axs[0, 1])
         self.design_distribution(value="travel_time", ax_=axs[0, 2])
-        self.shape_relerror_plot("grid")
-        self.shape_relerror_plot("subcatchment")
+        # self.shape_relerror_plot("grid")
+        # self.shape_relerror_plot("subcatchment")
         self.design_distribution(value="diameter", ax_=axs[1, 2])
         self.design_distribution(value="chamber_floor_elevation", ax_=axs[1, 0])
         self.design_distribution(value="slope", ax_=axs[1, 1])
 
-        self.annotate_flows_and_depths()
+        # self.annotate_flows_and_depths()
         f.tight_layout()
-        f.savefig(self.plotdir / "all_plots.svg")
+        f.savefig(self.plotdir / "fig4.svg")
 
     def annotate_flows_and_depths(self):
         """annotate_flows_and_depths.
