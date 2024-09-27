@@ -17,6 +17,7 @@ Navigate to the repository and install:
 
 ```bash
 pip install -e .
+pip install -r dev-requirements.txt
 ```
 
 ## Running the experiments
@@ -54,5 +55,5 @@ Only those required to create the plots are retained to avoid overwhelming the s
 All figures can be reproduced in the `tests/test_data/plots` directory by running `tests/test_figs.py` locally:
 
 ```bash
-python tests/test_figs.py
+pytest tests/test_figs.py
 ```
