@@ -5,15 +5,16 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from matplotlib import pyplot as plt
 from swmmanywhere.filepaths import check_bboxes
 from swmmanywhere.metric_utilities import metrics
 from swmmanywhere.swmmanywhere import load_config
 from tqdm import tqdm
 
 from swmmanywhere_paper import experimenter
+from swmmanywhere_paper.mappings import metric_mapping, param_mapping
 
-
-def plot_fig6():
+def plot_fig6(base_dir):
     # %% [markdown]
     # ## Initialise directories and load results
     # %%
@@ -24,7 +25,7 @@ def plot_fig6():
                 ]
     for project in projects:
 
-        base_dir = Path.home() / "Documents" / "data" / "swmmanywhere" / 'notrim_experiment'
+        
         config_path = base_dir / project / 'config.yml'
         config = load_config(config_path, validation = False)
         config['base_dir'] = base_dir / project
@@ -79,9 +80,6 @@ def plot_fig6():
         # %%
         # Highlight the behavioural indices 
         # (i.e., KGE, NSE, PBIAS are in some preferred range)
-        behavioral_indices = swplt.create_behavioral_indices(df,
-                                                            objectives)
-
 
         # Plot the objectives
         plot_objectives(df, 
@@ -145,33 +143,13 @@ def plot_objectives(df: pd.DataFrame,
     n_rows = 6
     
     col_mapping = {
-        0: ["outlet_relerror_length", "outlet_relerror_npipes", "outlet_relerror_nmanholes"],
+        0: ["outfall_relerror_length", "outfall_relerror_npipes", "outfall_relerror_nmanholes"],
         1: ["nc_deltacon0","nc_laplacian_dist","nc_vertex_edge_distance"],
         2: ["kstest_edge_betweenness","kstest_betweenness", None],
-        3: ["outlet_relerror_diameter","outlet_kstest_diameters", None],
-        4: ["outlet_nse_flow","outlet_kge_flow","outlet_relerror_flow"],
-        5: ["outlet_nse_flooding","outlet_kge_flooding","outlet_relerror_flooding"],
+        3: ["outfall_relerror_diameter","outfall_kstest_diameters", None],
+        4: ["outfall_nse_flow","outfall_kge_flow","outfall_relerror_flow"],
+        5: ["outfall_nse_flooding","outfall_kge_flooding","outfall_relerror_flooding"],
     }
-
-    
-def add_threshold_lines(ax, objective, xmin, xmax):
-    """Add threshold lines to the axes.
-
-    Args:
-        ax (plt.Axes): The axes to plot on.
-        objective (list[str]): The objective to plot.
-        xmin (float): The minimum x value.
-        xmax (float): The maximum x value.
-    """
-    thresholds = {
-        'relerror': [-0.1, 0.1],
-        'nse': [0.7],
-        'kge': [0.7]
-    }
-    for key, values in thresholds.items():
-        if key in objective:
-            for value in values:
-                ax.plot([xmin, xmax], [value, value], 'k--')
 
     for parameter in param_mapping.keys():
         if parameter not in parameters:
@@ -193,3 +171,23 @@ def add_threshold_lines(ax, objective, xmin, xmax):
         fig.tight_layout()
         fig.savefig(plot_fid / f"{parameter.replace('_', '-')}.png", dpi=500)
         plt.close(fig)
+
+    
+def add_threshold_lines(ax, objective, xmin, xmax):
+    """Add threshold lines to the axes.
+
+    Args:
+        ax (plt.Axes): The axes to plot on.
+        objective (list[str]): The objective to plot.
+        xmin (float): The minimum x value.
+        xmax (float): The maximum x value.
+    """
+    thresholds = {
+        'relerror': [-0.1, 0.1],
+        'nse': [0.7],
+        'kge': [0.7]
+    }
+    for key, values in thresholds.items():
+        if key in objective:
+            for value in values:
+                ax.plot([xmin, xmax], [value, value], 'k--')
