@@ -7,10 +7,16 @@ This repository is to reproduce the experiments and plots from [ref].
 
 ## Installation
 
-Pip install the repository:
+Clone the repository:
 
 ```
-pip install git+https://github.com/barneydobson/swmmanywhere_paper.git
+git clone https://github.com/barneydobson/swmmanywhere_paper.git
+```
+
+Navigate to the repository and install:
+
+```
+pip install -e .
 ```
 
 ## Running the experiments
