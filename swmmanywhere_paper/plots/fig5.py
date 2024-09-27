@@ -24,12 +24,27 @@ from swmmanywhere_paper.mappings import metric_mapping, param_mapping
 
 
 def plot_fig5(base_dir):
-    """Create heatmap of sensitivity indices."""
+    """Create fig 5 and supplement of heatmaps."""
     projects = [
-        "cranbrook_node_1439.1",
-        "bellinge_G60F61Y_G60F390_l1",
-        "bellinge_G72F800_G72F050_l1",
+        [
+            "cranbrook_node_1439.1",
+            "bellinge_G60F61Y_G60F390_l1",
+            "bellinge_G72F800_G72F050_l1",
+        ],
+        [
+            "bellinge_G72F550_G72F010_l1",
+            "bellinge_G60F61Y_G60F390_l1",
+            "bellinge_G74F150_G74F140_l1",
+            "bellinge_G80F390_G80F380_l1",
+            "bellinge_G73F000_G72F120_l1",
+        ],
     ]
+    for projects_ in projects:
+        make_heatmap_subplots(base_dir, projects_)
+
+
+def make_heatmap_subplots(base_dir, projects):
+    """Create heatmap of sensitivity indices."""
     ris = []
     for project in projects:
         config_path = base_dir / project / "config.yml"
@@ -131,7 +146,7 @@ def heatmaps(
         problem (dict): The problem formulation.
         sups (list[str]): The titles for the subplots.
     """
-    f, axs_ = plt.subplots(2, len(rs), figsize=(14, 10))
+    f, axs_ = plt.subplots(2, len(rs), figsize=(4 * len(rs), 10))
     axs_ = axs_.T
     for rd, axs, sup in zip(rs, axs_, sups):
         totals_ = []
