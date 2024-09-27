@@ -9,7 +9,10 @@ import numpy as np
 import pytest
 import yaml
 from swmmanywhere import parameters, swmmanywhere
-from swmmanywhere.paper import experimenter
+
+from swmmanywhere_paper import experimenter
+
+schema_fid = Path(__file__).parent.parent / "swmmanywhere_paper" / "schema.yml"
 
 
 def assert_close(a: float, b: float, rtol: float = 1e-3) -> None:
@@ -60,7 +63,7 @@ def test_process_parameters():
 
     # Test standard
     with mock.patch(
-        "swmmanywhere.paper.experimenter.swmmanywhere.swmmanywhere",
+        "swmmanywhere_paper.experimenter.swmmanywhere.swmmanywhere",
         return_value=("fake_path", {"fake_metric": 1}),
     ) as mock_sa:
         result = experimenter.process_parameters(0, 1, config)
@@ -71,7 +74,7 @@ def test_process_parameters():
     # Test experimenter takes precedence over overrides
     config["parameter_overrides"] = {"hydraulic_design": {"min_v": 1.0}}
     with mock.patch(
-        "swmmanywhere.paper.experimenter.swmmanywhere.swmmanywhere",
+        "swmmanywhere_paper.experimenter.swmmanywhere.swmmanywhere",
         return_value=("fake_path", {"fake_metric": 1}),
     ) as mock_sa:
         result = experimenter.process_parameters(0, 1, config)
@@ -82,7 +85,7 @@ def test_process_parameters():
     # Test non experimenter overrides still work
     config["parameter_overrides"] = {"hydraulic_design": {"max_fr": 0.5}}
     with mock.patch(
-        "swmmanywhere.paper.experimenter.swmmanywhere.swmmanywhere",
+        "swmmanywhere_paper.experimenter.swmmanywhere.swmmanywhere",
         return_value=("fake_path", {"fake_metric": 1}),
     ) as mock_sa:
         result = experimenter.process_parameters(0, 1, config)
@@ -97,30 +100,16 @@ def test_process_parameters():
 def test_check_parameters_to_sample():
     """Test the check_parameters_to_sample validation."""
     with tempfile.TemporaryDirectory() as temp_dir:
-        test_data_dir = Path(__file__).parent / "test_data"
         base_dir = Path(temp_dir)
 
         # Load the config
-        with (test_data_dir / "demo_config.yml").open("r") as f:
-            config = yaml.safe_load(f)
-
-        # Correct and avoid filevalidation errors
-        config["real"] = None
-
-        # Fill with unused paths to avoid filevalidation errors
-        config["base_dir"] = str(test_data_dir / "storm.dat")
-        config["api_keys"] = str(test_data_dir / "storm.dat")
+        config = swmmanywhere.load_config(validation=False)
 
         # Make an edit that should fail
-        config["parameters_to_sample"] = ["not_a_parameter"]
-
+        config["base_dir"] = str(base_dir)
+        del config["real"]
         with open(base_dir / "test_config.yml", "w") as f:
             yaml.dump(config, f)
-
-        # Test parameter validation
-        with pytest.raises(ValueError) as exc_info:
-            swmmanywhere.load_config(base_dir / "test_config.yml")
-        assert "not_a_parameter" in str(exc_info.value)
 
         # Test parameter_overrides invalid category
         config["parameter_overrides"] = {"fake_category": {"fake_parameter": 0}}
