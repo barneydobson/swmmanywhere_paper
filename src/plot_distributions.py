@@ -6,15 +6,11 @@ from pathlib import Path
 from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
-from SALib.analyze import sobol
 from scipy import stats
 from scipy.integrate import cumulative_trapezoid as cumtrapz
 from sklearn.preprocessing import MinMaxScaler
 from tqdm import tqdm
 
-from swmmanywhere.logging import logger
-from swmmanywhere_paper.src import experimenter
-from swmmanywhere_paper.src import plotting as swplt
 from swmmanywhere.filepaths import check_bboxes
 from swmmanywhere.swmmanywhere import load_config
 from swmmanywhere.metric_utilities import metrics

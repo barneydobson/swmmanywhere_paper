@@ -5,6 +5,9 @@ requires = [
   "setuptools-scm",
 ]
 
+[tool.setuptools]
+package-dir = {"" = "src"}
+
 [tool.setuptools.packages.find]
 exclude = ["htmlcov"] # Exclude the coverage report file from setuptools package finder
 

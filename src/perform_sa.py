@@ -9,8 +9,8 @@ from SALib.analyze import sobol
 from tqdm import tqdm
 
 from swmmanywhere.logging import logger
-from swmmanywhere_paper.src import experimenter
-from swmmanywhere_paper.src import plotting as swplt
+from swmmanywhere_paper import experimenter
+from swmmanywhere_paper import plotting as swplt
 from swmmanywhere.filepaths import check_bboxes
 from swmmanywhere.swmmanywhere import load_config
 from swmmanywhere.metric_utilities import metrics
