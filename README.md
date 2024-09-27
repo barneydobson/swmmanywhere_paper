@@ -5,6 +5,14 @@
 
 This repository is to reproduce the experiments and plots from [ref].
 
+## Installation
+
+Pip install the repository:
+
+```
+pip install git+https://github.com/barneydobson/swmmanywhere_paper.git
+```
+
 ## Running the experiments
 
 The intended use is via `config` file. We extend its behaviour with two new options:
