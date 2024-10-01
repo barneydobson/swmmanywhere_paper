@@ -23,7 +23,7 @@ attrs==24.2.0
     #   referencing
 build==1.2.2
     # via pip-tools
-cads-api-client==1.4.2
+cads-api-client==1.4.3
     # via cdsapi
 cdsapi==0.7.3
     # via swmmanywhere

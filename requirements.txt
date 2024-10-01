@@ -20,7 +20,7 @@ attrs==24.2.0
     #   jsonschema
     #   rasterio
     #   referencing
-cads-api-client==1.4.2
+cads-api-client==1.4.3
     # via cdsapi
 cdsapi==0.7.3
     # via swmmanywhere
