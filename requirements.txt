@@ -93,7 +93,7 @@ matplotlib==3.9.2
     #   salib
     #   seaborn
     #   swmmanywhere_paper (pyproject.toml)
-multiprocess==0.70.16
+multiprocess==0.70.17
     # via salib
 multiurl==0.3.1
     # via cads-api-client
