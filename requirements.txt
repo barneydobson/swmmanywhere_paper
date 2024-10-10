@@ -92,7 +92,7 @@ matplotlib==3.9.2
     # via
     #   salib
     #   seaborn
-    #   swmmanywhere_paper (pyproject.toml)
+    #   swmmanywhere-paper (pyproject.toml)
 multiprocess==0.70.17
     # via salib
 multiurl==0.3.1
@@ -105,7 +105,7 @@ networkx==3.3
     #   swmmanywhere
 numba==0.60.0
     # via pyflwdir
-numpy==2.1.1
+numpy==2.0.2
     # via
     #   cftime
     #   contourpy
@@ -221,9 +221,9 @@ rpds-py==0.20.0
     #   jsonschema
     #   referencing
 salib==1.5.1
-    # via swmmanywhere_paper (pyproject.toml)
+    # via swmmanywhere-paper (pyproject.toml)
 scikit-learn==1.5.2
-    # via swmmanywhere_paper (pyproject.toml)
+    # via swmmanywhere-paper (pyproject.toml)
 scipy==1.14.1
     # via
     #   pyflwdir
@@ -231,7 +231,7 @@ scipy==1.14.1
     #   scikit-learn
     #   swmmanywhere
 seaborn==0.13.2
-    # via swmmanywhere_paper (pyproject.toml)
+    # via swmmanywhere-paper (pyproject.toml)
 shapely==2.0.6
     # via
     #   geopandas
@@ -242,7 +242,7 @@ six==1.16.0
 swmm-toolkit==0.15.5
     # via pyswmm
 swmmanywhere==0.1.4
-    # via swmmanywhere_paper (pyproject.toml)
+    # via swmmanywhere-paper (pyproject.toml)
 threadpoolctl==3.5.0
     # via scikit-learn
 toolz==0.12.1
