@@ -14,6 +14,16 @@ from tqdm import tqdm
 
 from swmmanywhere_paper.mappings import param_mapping
 
+labs = {
+            "cranbrook_node_1439.1" : "Cran Brook",
+            "bellinge_G60F61Y_G60F390_l1" : "Bellinge 1",
+            "bellinge_G72F800_G72F050_l1" : "Bellinge 7",
+            "bellinge_G73F000_G72F120_l1" : "Bellinge 2",
+            "bellinge_G80F390_G80F380_l1" : "Bellinge 3",
+            "bellinge_G72F550_G72F010_l1" : "Bellinge 4",
+            "bellinge_G62F060_G61F180_l1" : "Bellinge 5",
+            "bellinge_G74F150_G74F140_l1" : "Bellinge 6",
+        }
 
 def plot_fig78(base_dir):
     """Create CDF estimates of the parameter values."""
@@ -240,7 +250,7 @@ def plot_fig78(base_dir):
                 handle = ax.plot(
                     x[1:],
                     cumtrapz(kde(x), x),
-                    label=project,
+                    label=labs[project],
                     color=colls[project]["col"],
                     ls=colls[project]["ls"],
                     lw=1,
@@ -256,7 +266,7 @@ def plot_fig78(base_dir):
                     ax.set_yticklabels([])
                 else:
                     ax.set_ylabel("CDF(x)")
-                hl[project] = handle
+                hl[labs[project]] = handle
 
     axs[-1, -1].legend(handles=[x[0] for x in hl.values()])
     fig.tight_layout()

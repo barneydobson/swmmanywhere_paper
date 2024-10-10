@@ -26,18 +26,18 @@ from swmmanywhere_paper.mappings import metric_mapping, param_mapping
 def plot_fig5(base_dir):
     """Create fig 5 and supplement of heatmaps."""
     projects = [
-        [
-            "cranbrook_node_1439.1",
-            "bellinge_G60F61Y_G60F390_l1",
-            "bellinge_G72F800_G72F050_l1",
-        ],
-        [
-            "bellinge_G72F550_G72F010_l1",
-            "bellinge_G60F61Y_G60F390_l1",
-            "bellinge_G74F150_G74F140_l1",
-            "bellinge_G80F390_G80F380_l1",
-            "bellinge_G73F000_G72F120_l1",
-        ],
+        {
+            "cranbrook_node_1439.1" : "Cran Brook",
+            "bellinge_G60F61Y_G60F390_l1" : "Bellinge 1 (largest)",
+            "bellinge_G72F800_G72F050_l1" : "Bellinge 7 (smallest)",
+        },
+        {
+            "bellinge_G73F000_G72F120_l1" : "Bellinge 2",
+            "bellinge_G80F390_G80F380_l1" : "Bellinge 3",
+            "bellinge_G72F550_G72F010_l1" : "Bellinge 4",
+            "bellinge_G62F060_G61F180_l1" : "Bellinge 5",
+            "bellinge_G74F150_G74F140_l1" : "Bellinge 6",
+        },
     ]
     fids = ["fig5.svg", "fig_sup.svg"]
     plot_dir = base_dir / "plots"
@@ -50,7 +50,7 @@ def plot_fig5(base_dir):
 def make_heatmap_subplots(base_dir, projects, plot_fid):
     """Create heatmap of sensitivity indices."""
     ris = []
-    for project in projects:
+    for project, tlab in projects.items():
         config_path = base_dir / project / "config.yml"
         config = load_config(config_path, validation=False)
         config["base_dir"] = base_dir / project
@@ -131,7 +131,7 @@ def make_heatmap_subplots(base_dir, projects, plot_fid):
 
         ris.append(ri)
 
-    heatmaps(ris, plot_fid, problem, projects)
+    heatmaps(ris, plot_fid, problem, projects.values())
 
 
 def heatmaps(
@@ -223,6 +223,8 @@ def heatmaps(
             vmax=1.0,
         )
         axs[0].set_title(sup)
+        axs[0].set_aspect("equal", adjustable="box")
+        axs[1].set_aspect("equal", adjustable="box")
         if rd is not rs[0]:
             axs[0].set_yticklabels([])
             axs[1].set_yticklabels([])
