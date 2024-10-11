@@ -1,7 +1,4 @@
 # SWMManywhere sensitivity analysis
-<!-- markdown-link-check-disable -->
-[![Test and build](https://github.com/ImperialCollegeLondon/SWMManywhere/actions/workflows/ci.yml/badge.svg)](https://github.com/ImperialCollegeLondon/SWMManywhere/actions/workflows/ci.yml)
-<!-- markdown-link-check-enable -->
 
 This repository is to reproduce the experiments and plots from [ref].
 

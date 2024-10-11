@@ -27,16 +27,16 @@ def plot_fig5(base_dir):
     """Create fig 5 and supplement of heatmaps."""
     projects = [
         {
-            "cranbrook_node_1439.1" : "Cran Brook",
-            "bellinge_G60F61Y_G60F390_l1" : "Bellinge 1 (largest)",
-            "bellinge_G72F800_G72F050_l1" : "Bellinge 7 (smallest)",
+            "cranbrook_node_1439.1": "Cran Brook",
+            "bellinge_G60F61Y_G60F390_l1": "Bellinge 1 (largest)",
+            "bellinge_G72F800_G72F050_l1": "Bellinge 7 (smallest)",
         },
         {
-            "bellinge_G73F000_G72F120_l1" : "Bellinge 2",
-            "bellinge_G80F390_G80F380_l1" : "Bellinge 3",
-            "bellinge_G72F550_G72F010_l1" : "Bellinge 4",
-            "bellinge_G62F060_G61F180_l1" : "Bellinge 5",
-            "bellinge_G74F150_G74F140_l1" : "Bellinge 6",
+            "bellinge_G73F000_G72F120_l1": "Bellinge 2",
+            "bellinge_G80F390_G80F380_l1": "Bellinge 3",
+            "bellinge_G72F550_G72F010_l1": "Bellinge 4",
+            "bellinge_G62F060_G61F180_l1": "Bellinge 5",
+            "bellinge_G74F150_G74F140_l1": "Bellinge 6",
         },
     ]
     fids = ["fig5.svg", "fig_sup.svg"]
