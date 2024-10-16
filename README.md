@@ -1,6 +1,9 @@
 # SWMManywhere sensitivity analysis
 
-This repository is to reproduce the experiments and plots from [ref].
+This repository is to reproduce the experiments and plots from [this paper](https://doi.org/10.31223/X5GT5X):
+
+> Dobson, Barnaby, et al. "SWMManywhere: A Global-scale Workflow for Generation and Sensitivity Analysis of Synthetic Urban Drainage Models." (2024). doi: 10.31223/X5GT5X
+
 
 ## Installation
 
