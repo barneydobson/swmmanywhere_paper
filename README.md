@@ -4,7 +4,6 @@ This repository is to reproduce the experiments and plots from [this paper](http
 
 > Dobson, Barnaby, et al. "SWMManywhere: A Global-scale Workflow for Generation and Sensitivity Analysis of Synthetic Urban Drainage Models." (2024). doi: 10.31223/X5GT5X
 
-
 ## Installation
 
 Clone the repository:
