@@ -241,7 +241,7 @@ six==1.16.0
     # via python-dateutil
 swmm-toolkit==0.15.5
     # via pyswmm
-swmmanywhere==0.1.4
+swmmanywhere==0.1.6
     # via swmmanywhere-paper (pyproject.toml)
 threadpoolctl==3.5.0
     # via scikit-learn
