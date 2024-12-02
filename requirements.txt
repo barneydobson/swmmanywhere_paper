@@ -105,7 +105,7 @@ networkx==3.3
     #   swmmanywhere
 numba==0.60.0
     # via pyflwdir
-numpy==2.0.2
+numpy==2.1.3
     # via
     #   cftime
     #   contourpy
