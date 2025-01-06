@@ -261,7 +261,7 @@ tzdata==2024.2
     # via pandas
 urllib3==2.2.3
     # via requests
-win32-setctime==1.1.0
+win32-setctime==1.2.0
     # via loguru
 xarray==2024.9.0
     # via
