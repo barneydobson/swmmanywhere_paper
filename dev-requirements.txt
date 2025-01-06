@@ -64,7 +64,7 @@ coverage==7.6.1
     # via pytest-cov
 cycler==0.12.1
     # via matplotlib
-cytoolz==0.12.3
+cytoolz==1.0.1
     # via swmmanywhere
 dill==0.3.9
     # via multiprocess
