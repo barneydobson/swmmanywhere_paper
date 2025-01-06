@@ -324,7 +324,7 @@ virtualenv==20.26.6
     # via pre-commit
 wheel==0.44.0
     # via pip-tools
-win32-setctime==1.1.0
+win32-setctime==1.2.0
     # via loguru
 xarray==2024.9.0
     # via
