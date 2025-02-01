@@ -224,7 +224,7 @@ salib==1.5.1
     # via swmmanywhere-paper (pyproject.toml)
 scikit-learn==1.5.2
     # via swmmanywhere-paper (pyproject.toml)
-scipy==1.14.1
+scipy==1.15.1
     # via
     #   pyflwdir
     #   salib
