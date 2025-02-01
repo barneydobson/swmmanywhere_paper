@@ -36,7 +36,7 @@ certifi==2024.8.30
     #   requests
 cfgv==3.4.0
     # via pre-commit
-cftime==1.6.4
+cftime==1.6.4.post1
     # via netcdf4
 charset-normalizer==3.3.2
     # via requests
