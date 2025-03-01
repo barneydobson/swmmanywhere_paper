@@ -146,7 +146,7 @@ pandas==2.2.3
     #   seaborn
     #   swmmanywhere
     #   xarray
-pillow==10.4.0
+pillow==11.1.0
     # via matplotlib
 planetary-computer==1.0.0
     # via swmmanywhere
