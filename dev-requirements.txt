@@ -176,7 +176,7 @@ pandas==2.2.3
     #   seaborn
     #   swmmanywhere
     #   xarray
-pillow==10.4.0
+pillow==11.1.0
     # via matplotlib
 pip-tools==7.4.1
     # via swmmanywhere-paper (pyproject.toml)
