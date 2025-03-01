@@ -170,7 +170,7 @@ pyproj==3.6.1
     # via
     #   geopandas
     #   rioxarray
-pystac[validation]==1.10.1
+pystac[validation]==1.12.2
     # via
     #   planetary-computer
     #   pystac-client
