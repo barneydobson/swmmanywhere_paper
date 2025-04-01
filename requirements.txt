@@ -86,7 +86,7 @@ kiwisolver==1.4.7
     # via matplotlib
 llvmlite==0.43.0
     # via numba
-loguru==0.7.2
+loguru==0.7.3
     # via swmmanywhere
 matplotlib==3.9.2
     # via
