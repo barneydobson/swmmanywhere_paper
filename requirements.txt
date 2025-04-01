@@ -232,7 +232,7 @@ scipy==1.15.1
     #   swmmanywhere
 seaborn==0.13.2
     # via swmmanywhere-paper (pyproject.toml)
-shapely==2.0.6
+shapely==2.0.7
     # via
     #   geopandas
     #   osmnx
